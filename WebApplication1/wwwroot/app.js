@@ -7,9 +7,12 @@
         return;
     }
 
-    alert(`Registered successfully!\nEmail: ${email}\nPassword: ${password}`);
+    alert(`Registered successfully!\nEmail: ${email}`);
     document.getElementById('regEmail').value = '';
     document.getElementById('regPassword').value = '';
+
+    // Redirect to dashboard
+    window.location.href = 'dashboard.html';
 }
 
 function loginUser() {
@@ -24,4 +27,7 @@ function loginUser() {
     alert(`Logged in successfully!\nEmail: ${email}`);
     document.getElementById('loginEmail').value = '';
     document.getElementById('loginPassword').value = '';
+
+    // Redirect to dashboard
+    window.location.href = 'dashboard.html';
 }
