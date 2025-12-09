@@ -4,14 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Morris App</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Register Page</h1>
-    <input type="email" id="regEmail" placeholder="Email">
-    <br><br>
-    <input type="password" id="regPassword" placeholder="Password">
-    <br><br>
-    <button onclick="registerUser()">Register</button>
-    <p><a href="login.html">Already have an account? Login</a></p>
+    <main class="container">
+        <h2>Create Account</h2>
+
+        <input id="regEmail" type="email" placeholder="Email">
+        <input id="regPassword" type="password" placeholder="Password">
+
+        <button onclick="registerUser()">Register</button>
+
+        <p>Already have an account? <a href="login.html">Login here</a></p>
+    </main>
+
+    <script src="app.js"></script>
 </body>
 </html>
