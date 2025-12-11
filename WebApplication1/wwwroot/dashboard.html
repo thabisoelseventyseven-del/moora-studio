@@ -1,28 +1,199 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Morris App</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - Moora Studio</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* ---- Dashboard Specific Updates ---- */
+.dashboard-card h3 { font-size: 2rem; }
+.selected-template { border: 2px solid #ff6ec7; background-color: #1a1a28; }
+
+#messageBox {
+    width: 100%;
+    min-height: 140px;
+    padding: 1em;
+    margin-top: 0.5em;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    resize: vertical;
+    font-size: 1rem;
+}
+
+#guidanceMsg { margin: 1em 0; font-size: 1rem; color: #ff6ec7; }
+
+/* Inbox badge */
+#inboxBtn { position: relative; }
+#badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: red;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 50%;
+    display: none;
+}
+
+/* Template price — adapts to theme */
+.template-price { font-size: 0.95rem; margin-top: 4px; }
+body:not(.light-theme) .template-price { color: #ffd6f0; }
+body.light-theme .template-price { color: #ff1493; }
+</style>
 </head>
 <body>
-    <main class="container">
-        <h1>Welcome to Your Dashboard!</h1>
-        <p id="userEmail">You are logged in as: </p>
-        <div class="links">
-            <button onclick="logoutUser()">Logout</button>
-        </div>
-    </main>
 
-    <script src="app.js"></script>
-    <script>
-      const email = localStorage.getItem('userEmail');
-      if(email) {
-          document.getElementById('userEmail').innerText = `You are logged in as: ${email}`;
-      } else {
-          window.location.href = 'index.html'; // redirect if not logged in
-      }
-    </script>
+<!-- Floating Dots -->
+<div class="floating-dots"><span></span><span></span><span></span><span></span><span></span></div>
+
+<!-- Top Navigation -->
+<div class="top-left-nav">
+    <a href="dashboard.html" class="btn small-btn">Dashboard</a>
+    <button id="inboxBtn" class="btn small-btn">Inbox <span id="badge"></span></button>
+    <button id="logoutBtn" class="btn small-btn">Logout</button>
+    <button id="theme-toggle" class="btn small-btn">☀️</button>
+</div>
+
+<header class="header">
+    <h1>Welcome, <span id="userName"></span></h1>
+    <p class="tagline">Browse templates & send messages</p>
+</header>
+
+<section class="dashboard-container">
+
+    <div class="dashboard-section">
+        <h2>Available Templates</h2>
+        <p>Select any template(s) below (multiple allowed, but no duplicates):</p>
+        <div class="dashboard-cards" id="templatesContainer"></div>
+    </div>
+
+    <div class="dashboard-section">
+        <h2>Your Message</h2>
+        <p id="guidanceMsg">Select a template above and write your message in Sepedi or English.</p>
+
+        <div class="messages-container">
+            <div class="dashboard-card">
+                <h3 id="currentTemplate">No template selected</h3>
+                <textarea id="messageBox" placeholder="Write your message here..."></textarea>
+                <button class="btn" id="sendMessageBtn">Send</button>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+<footer class="footer">
+    <p><strong>Contact Us</strong></p>
+    <p>📛 Name: Thabiso Mosesi</p>
+    <p>📞 Phone: 072 176 9099</p>
+    <p>✉️ Email: thabisoelseventyseven@gmail.com</p>
+    <div class="social-icons">
+        <a href="#">📘</a>
+        <a href="#">🐦</a>
+        <a href="#">📸</a>
+        <a href="#">💬</a>
+    </div>
+    <p class="copyright">© 2025 Moora Studio</p>
+</footer>
+
+<script>
+// Theme toggle
+const themeToggle = document.getElementById("theme-toggle");
+const savedTheme = localStorage.getItem("theme") || "dark";
+if(savedTheme === "light") { document.body.classList.add("light-theme"); themeToggle.textContent = "🌙"; } 
+else { document.body.classList.remove("light-theme"); themeToggle.textContent = "☀️"; }
+
+themeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("light-theme");
+    if(document.body.classList.contains("light-theme")){
+        themeToggle.textContent = "🌙"; localStorage.setItem("theme","light");
+    } else { themeToggle.textContent = "☀️"; localStorage.setItem("theme","dark"); }
+});
+
+// Logout
+document.getElementById("logoutBtn").addEventListener("click", () => {
+    sessionStorage.clear(); window.location.href = "login.html";
+});
+
+// Load user
+const user = JSON.parse(sessionStorage.getItem("user"));
+if(!user) window.location.href = "login.html";
+else document.getElementById("userName").textContent = user.name || "User";
+
+// Templates with prices
+let templates = [
+    {name:"Business Templates", icon:"💼", price:"R250"},
+    {name:"Portfolio Templates", icon:"🎨", price:"R200"},
+    {name:"Landing Pages", icon:"🌐", price:"R300"},
+    {name:"Marketing Materials", icon:"📣", price:"R180"},
+    {name:"CV Templates", icon:"📝", price:"R100"},
+    {name:"University Application Templates", icon:"🎓", price:"R150"},
+    {name:"Report Templates", icon:"📊", price:"R120"},
+    {name:"Web Templates", icon:"💻", price:"R350"}
+];
+
+const templatesContainer = document.getElementById("templatesContainer");
+let currentTemplate = document.getElementById("currentTemplate");
+let messageBox = document.getElementById("messageBox");
+let sendMessageBtn = document.getElementById("sendMessageBtn");
+
+let selectedTemplates = [];
+
+// Render templates
+function renderTemplates(){
+    templatesContainer.innerHTML = "";
+    templates.forEach(tpl => {
+        const div = document.createElement("div");
+        div.classList.add("dashboard-card");
+        div.innerHTML = `
+            <h3 style="font-size:2rem">${tpl.icon} ${tpl.name}</h3>
+            <div class="template-price">Price: ${tpl.price}</div>
+        `;
+        div.addEventListener("click", () => {
+            if(selectedTemplates.includes(tpl.name)){ alert("You have already selected this template."); return; }
+            selectedTemplates.push(tpl.name);
+            div.classList.add("selected-template");
+            updateMessageHeader();
+        });
+        templatesContainer.appendChild(div);
+    });
+}
+renderTemplates();
+
+// Update message header
+function updateMessageHeader(){ currentTemplate.textContent = selectedTemplates.join(" | "); messageBox.focus(); }
+
+// Send message → goes to inbox
+function sendMessage(){
+    const msgText = messageBox.value.trim();
+    if(selectedTemplates.length === 0){ alert("Please select at least one template first."); return; }
+    if(!msgText){ alert("Message cannot be empty."); return; }
+
+    const inbox = JSON.parse(localStorage.getItem("inbox") || "[]");
+    inbox.push({ user: user.name, email: user.email, templates: [...selectedTemplates], message: msgText, reply: null, sentAt: new Date().toISOString() });
+    localStorage.setItem("inbox", JSON.stringify(inbox));
+
+    messageBox.value = ""; selectedTemplates = []; currentTemplate.textContent = "No template selected"; renderTemplates();
+    updateBadge();
+    alert("Message sent to inbox.");
+}
+sendMessageBtn.addEventListener("click", sendMessage);
+
+// Inbox badge
+function updateBadge(){
+    const inbox = JSON.parse(localStorage.getItem("inbox") || "[]");
+    const myInbox = inbox.filter(m => m.email === user.email);
+    const badge = document.getElementById("badge");
+    badge.textContent = myInbox.length;
+    badge.style.display = myInbox.length > 0 ? "inline-block" : "none";
+}
+updateBadge();
+
+// Inbox button
+document.getElementById("inboxBtn").addEventListener("click", () => { window.location.href = "inbox.html"; });
+</script>
+
 </body>
 </html>

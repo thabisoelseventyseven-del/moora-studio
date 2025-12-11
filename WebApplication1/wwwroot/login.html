@@ -1,25 +1,114 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Morris App</title>
-    <link rel="stylesheet" href="style.css">
-
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
-    <script src="firebase.js"></script>
-    <script src="app.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Moora Studio</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <main class="container">
-        <h2>Login</h2>
 
-        <input type="email" id="loginEmail" placeholder="Email">
-        <input type="password" id="loginPassword" placeholder="Password">
+<div class="floating-dots"><span></span><span></span><span></span><span></span><span></span></div>
 
-        <button class="btn" onclick="loginUser()">Login</button>
-    </main>
+<div class="top-left-nav">
+    <a href="login.html" class="btn small-btn">Login</a>
+    <a href="register.html" class="btn small-btn">Register</a>
+    <button id="theme-toggle" class="btn small-btn"></button>
+</div>
+
+<div class="form-container">
+    <h1>Login</h1>
+    <p>Welcome back! Please login to continue.</p>
+    <div id="errorMessage" style="color:#ff6ec7;"></div>
+
+    <form id="loginForm">
+        <input type="email" id="email" placeholder="Email" required>
+        <div class="password-wrapper">
+            <input type="password" id="password" placeholder="Password" required>
+            <span class="toggle-password">👁️</span>
+        </div>
+        <button type="submit" class="btn btn-large">Login</button>
+    </form>
+
+    <div class="redirect">
+        Don't have an account? <a href="register.html">Register here</a>
+    </div>
+</div>
+
+<script>
+// Theme toggle
+const themeToggle = document.getElementById("theme-toggle");
+const savedTheme = localStorage.getItem("theme") || "dark";
+if(savedTheme === "light") {
+    document.body.classList.add("light-theme");
+    themeToggle.textContent = "🌙";
+} else {
+    document.body.classList.remove("light-theme");
+    themeToggle.textContent = "☀️";
+}
+themeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("light-theme");
+    if(document.body.classList.contains("light-theme")){
+        themeToggle.textContent = "🌙";
+        localStorage.setItem("theme","light");
+    } else {
+        themeToggle.textContent = "☀️";
+        localStorage.setItem("theme","dark");
+    }
+});
+
+// Toggle password visibility
+document.querySelector(".toggle-password").onclick = () => {
+    const input = document.getElementById("password");
+    input.type = input.type === "password" ? "text" : "password";
+};
+
+// Hardcoded admin credentials
+const ADMIN_EMAIL = "thabisoelseventyseven@gmail.com";
+const ADMIN_PASSWORD = "Moesi100#";
+
+// Ensure localStorage has a users array
+if(!localStorage.getItem('users')) localStorage.setItem('users', JSON.stringify([]));
+
+// Login logic
+const loginForm = document.getElementById('loginForm');
+loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    // Admin login
+    if(email === ADMIN_EMAIL && password === ADMIN_PASSWORD){
+        sessionStorage.setItem('user', JSON.stringify({
+            name: "Admin",
+            email: ADMIN_EMAIL,
+            role: "admin"
+        }));
+        window.location.href = "admin.html";
+        return;
+    }
+
+    // Normal users login
+    const users = JSON.parse(localStorage.getItem('users') || "[]");
+    const user = users.find(u => u.email === email && u.password === password);
+
+    if(!user){
+        document.getElementById('errorMessage').textContent = "Invalid email or password!";
+        return;
+    }
+
+    // Save session
+    sessionStorage.setItem('user', JSON.stringify({
+        name: user.name,
+        email: user.email,
+        role: "user"
+    }));
+
+    // Redirect to dashboard
+    window.location.href = "dashboard.html";
+});
+</script>
+
 </body>
 </html>
