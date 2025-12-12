@@ -37,26 +37,16 @@
     display: none;
 }
 
-/* Voice note controls */
-.voice-controls {
-    display:flex;
-    gap:12px;
-    margin-top:8px;
-    align-items:center;
-}
-.voice-controls button {
-    padding:8px 14px;
-    background:linear-gradient(135deg,#50e3c2,#ff6ec7);
-    border:none;
-    color:white;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:bold;
-}
-
+/* Template price — adapts to theme */
 .template-price { font-size: 0.95rem; margin-top: 4px; }
 body:not(.light-theme) .template-price { color: #ffd6f0; }
 body.light-theme .template-price { color: #ff1493; }
+
+/* Voice note controls */
+.voice-controls { display:flex; gap:12px; margin-top:8px; align-items:center; }
+.voice-controls button { padding:8px 14px; background:linear-gradient(135deg,#50e3c2,#ff6ec7); border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold; }
+.voice-play { margin-top:8px; }
+.delete-btn { background:#ff4d4d; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; margin-left:6px; }
 </style>
 </head>
 <body>
@@ -87,20 +77,28 @@ body.light-theme .template-price { color: #ff1493; }
 
     <div class="dashboard-section">
         <h2>Your Message</h2>
-        <p id="guidanceMsg">Select a template above and write your message in Sepedi or English.</p>
+        <p id="guidanceMsg">Select a template above and write your message in Sepedi or English. You can also attach a voice note.</p>
 
         <div class="messages-container">
             <div class="dashboard-card">
                 <h3 id="currentTemplate">No template selected</h3>
                 <textarea id="messageBox" placeholder="Write your message here..."></textarea>
+
+                <!-- Voice recording controls -->
                 <div class="voice-controls">
                     <button id="recordBtn">🎤 Record Voice Note</button>
                     <button id="stopBtn" disabled>⏹ Stop & Save</button>
                     <audio id="voicePreview" controls style="display:none;margin-top:10px;"></audio>
                 </div>
+
                 <button class="btn" id="sendMessageBtn">Send</button>
             </div>
         </div>
+    </div>
+
+    <div class="dashboard-section">
+        <h2>Your Inbox Messages</h2>
+        <div id="userInboxContainer"></div>
     </div>
 
 </section>
@@ -125,6 +123,7 @@ const themeToggle = document.getElementById("theme-toggle");
 const savedTheme = localStorage.getItem("theme") || "dark";
 if(savedTheme === "light") { document.body.classList.add("light-theme"); themeToggle.textContent = "🌙"; } 
 else { document.body.classList.remove("light-theme"); themeToggle.textContent = "☀️"; }
+
 themeToggle.addEventListener("click", () => {
     document.body.classList.toggle("light-theme");
     if(document.body.classList.contains("light-theme")){
@@ -167,8 +166,10 @@ function renderTemplates(){
     templates.forEach(tpl => {
         const div = document.createElement("div");
         div.classList.add("dashboard-card");
-        div.innerHTML = `<h3 style="font-size:2rem">${tpl.icon} ${tpl.name}</h3>
-                         <div class="template-price">Price: ${tpl.price}</div>`;
+        div.innerHTML = `
+            <h3 style="font-size:2rem">${tpl.icon} ${tpl.name}</h3>
+            <div class="template-price">Price: ${tpl.price}</div>
+        `;
         div.addEventListener("click", () => {
             if(selectedTemplates.includes(tpl.name)){ alert("You have already selected this template."); return; }
             selectedTemplates.push(tpl.name);
@@ -180,30 +181,53 @@ function renderTemplates(){
 }
 renderTemplates();
 
+// Update message header
 function updateMessageHeader(){ currentTemplate.textContent = selectedTemplates.join(" | "); messageBox.focus(); }
 
-// Send message → goes to inbox
-function sendMessage(){
-    const msgText = messageBox.value.trim();
-    const voiceData = localStorage.getItem("voiceNote") || null;
+// --- Voice recording ---
+let mediaRecorder, audioChunks=[];
+const recordBtn = document.getElementById("recordBtn");
+const stopBtn = document.getElementById("stopBtn");
+const voicePreview = document.getElementById("voicePreview");
+let voiceData = null;
 
-    if(selectedTemplates.length === 0){ alert("Please select at least one template first."); return; }
-    if(!msgText && !voiceData){ alert("Message or voice note required."); return; }
+recordBtn.addEventListener("click", async ()=>{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks=[];
+    mediaRecorder.addEventListener("dataavailable", e=>audioChunks.push(e.data));
+    mediaRecorder.addEventListener("stop", ()=>{
+        const blob = new Blob(audioChunks,{type:'audio/mp3'});
+        const reader = new FileReader();
+        reader.onloadend=()=>{ voiceData=reader.result; voicePreview.src=voiceData; voicePreview.style.display="block"; };
+        reader.readAsDataURL(blob);
+    });
+    mediaRecorder.start();
+    recordBtn.disabled=true;
+    stopBtn.disabled=false;
+});
+stopBtn.addEventListener("click", ()=>{
+    mediaRecorder.stop();
+    recordBtn.disabled=false;
+    stopBtn.disabled=true;
+});
+
+// --- Send message ---
+sendMessageBtn.addEventListener("click", ()=>{
+    const msgText = messageBox.value.trim();
+    if(selectedTemplates.length === 0 && !msgText && !voiceData){ alert("Select template, or write a message, or record voice."); return; }
 
     const inbox = JSON.parse(localStorage.getItem("inbox") || "[]");
-    inbox.push({ 
-        user: user.name, email: user.email, templates: [...selectedTemplates], 
-        message: msgText, voice: voiceData, reply: null, sentAt: new Date().toISOString() 
-    });
+    inbox.push({ user: user.name, email: user.email, templates: [...selectedTemplates], message: msgText, voice: voiceData, reply:null, adminVoice:null, sentAt: new Date().toISOString() });
     localStorage.setItem("inbox", JSON.stringify(inbox));
 
-    messageBox.value = ""; selectedTemplates = []; currentTemplate.textContent = "No template selected"; renderTemplates();
-    localStorage.removeItem("voiceNote");
-    document.getElementById("voicePreview").style.display="none";
+    messageBox.value=""; selectedTemplates=[]; currentTemplate.textContent="No template selected";
+    voiceData=null; voicePreview.src=""; voicePreview.style.display="none";
+    renderTemplates();
     updateBadge();
+    loadUserInbox();
     alert("Message sent to inbox.");
-}
-sendMessageBtn.addEventListener("click", sendMessage);
+});
 
 // Inbox badge
 function updateBadge(){
@@ -218,41 +242,59 @@ updateBadge();
 // Inbox button
 document.getElementById("inboxBtn").addEventListener("click", () => { window.location.href = "inbox.html"; });
 
-/* ----- Voice Note Recording ----- */
-let mediaRecorder, audioChunks = [];
-const recordBtn = document.getElementById("recordBtn");
-const stopBtn = document.getElementById("stopBtn");
-const audioPreview = document.getElementById("voicePreview");
+// --- Load user inbox ---
+const userInboxContainer = document.getElementById("userInboxContainer");
+function loadUserInbox(){
+    const inbox = JSON.parse(localStorage.getItem("inbox") || "[]");
+    const userMessages = inbox.filter(m=>m.email===user.email);
+    userInboxContainer.innerHTML="";
+    if(userMessages.length===0){ userInboxContainer.innerHTML="<p>No messages yet.</p>"; return; }
 
-recordBtn.addEventListener("click", async () => {
-    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-        alert("Your browser does not support audio recording.");
-        return;
-    }
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
+    userMessages.forEach((msg,index)=>{
+        const div=document.createElement("div");
+        div.classList.add("dashboard-card");
 
-    mediaRecorder.addEventListener("dataavailable", e => { audioChunks.push(e.data); });
-    mediaRecorder.addEventListener("stop", () => {
-        const blob = new Blob(audioChunks, { type: 'audio/mp3' });
-        const url = URL.createObjectURL(blob);
-        audioPreview.src = url; audioPreview.style.display="block";
-        const reader = new FileReader();
-        reader.onloadend = () => { localStorage.setItem("voiceNote", reader.result); };
-        reader.readAsDataURL(blob);
+        const userVoiceHTML = msg.voice?`<div class="voice-play"><strong>Your Voice Note:</strong><br>
+            <audio controls src="${msg.voice}"></audio>
+            <button class="delete-btn" onclick="deleteUserVoice(${index})">Delete VC</button>
+        </div>`:"";
+
+        const adminVoiceHTML = msg.adminVoice?`<div class="voice-play"><strong>Admin Reply VC:</strong><br>
+            <audio controls src="${msg.adminVoice}"></audio>
+            <button class="delete-btn" onclick="deleteAdminVoice(${index})">Delete Admin VC</button>
+        </div>`:"";
+
+        div.innerHTML=`
+            <p><strong>Message:</strong> ${msg.message}</p>
+            ${userVoiceHTML}
+            ${adminVoiceHTML}
+            <p><strong>Admin Text Reply:</strong> ${msg.reply||"No reply yet"}</p>
+        `;
+        userInboxContainer.appendChild(div);
     });
+}
 
-    mediaRecorder.start();
-    recordBtn.disabled = true;
-    stopBtn.disabled = false;
-});
+// Delete voice notes
+function deleteUserVoice(globalIndex){
+    if(!confirm("Delete your voice note?")) return;
+    const inbox = JSON.parse(localStorage.getItem("inbox") || "[]");
+    const userMessages = inbox.filter(m=>m.email===user.email);
+    const msg = userMessages[globalIndex];
+    const realIndex = inbox.findIndex(m=>m.sentAt===msg.sentAt);
+    if(realIndex>-1){ inbox[realIndex].voice=null; localStorage.setItem("inbox",JSON.stringify(inbox)); loadUserInbox(); }
+}
+function deleteAdminVoice(globalIndex){
+    if(!confirm("Delete admin voice note reply?")) return;
+    const inbox = JSON.parse(localStorage.getItem("inbox") || "[]");
+    const userMessages = inbox.filter(m=>m.email===user.email);
+    const msg = userMessages[globalIndex];
+    const realIndex = inbox.findIndex(m=>m.sentAt===msg.sentAt);
+    if(realIndex>-1){ inbox[realIndex].adminVoice=null; localStorage.setItem("inbox",JSON.stringify(inbox)); loadUserInbox(); }
+}
 
-stopBtn.addEventListener("click", () => {
-    mediaRecorder.stop();
-    recordBtn.disabled = false;
-    stopBtn.disabled = true;
-});
+// Initial inbox load
+loadUserInbox();
 </script>
+
 </body>
 </html>
