@@ -3,116 +3,76 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Moora Studio - Template Marketplace</title>
+<title>Moora Studio - Inbox</title>
 <link rel="stylesheet" href="style.css">
-
 <style>
-/* Footer Inline Styling */
-.footer {
-    background: #d3d3d3;
-    padding: 2em 1em;
-    text-align: center;
-    font-family: Arial, sans-serif;
-    color: #000;
+/* Inbox-specific styling */
+.inbox-container {
+    max-width: 900px;
+    margin: 2em auto;
+    padding: 0 20px;
 }
 
-.footer p {
-    margin: 0.5em 0;
-    font-size: 1rem;
+.inbox-card {
+    background: #1c1c27;
+    border-radius: 12px;
+    padding: 1em;
+    margin-bottom: 1em;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
 }
 
-.footer strong {
-    display: block;
-    margin-bottom: 0.8em;
-    font-size: 1.1rem;
+.inbox-card p { margin: 0.5em 0; }
+.inbox-card .voice-container { display:flex; align-items:center; gap:10px; margin-top:6px; }
+.inbox-card .voice-container audio { height: 40px; }
+.inbox-card .voice-container button { padding:4px 8px; background:#ff4d4d; border:none; color:#fff; border-radius:6px; cursor:pointer; font-size:0.8rem; }
+
+.inbox-card textarea {
+    width: 100%;
+    min-height: 80px;
+    margin-top: 6px;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background:#0f0f15;
+    color:#eee;
+    resize:vertical;
 }
 
-.footer .social-icons {
-    margin: 0.8em 0;
+.inbox-card button.send-btn {
+    margin-top: 6px;
+    padding: 6px 12px;
+    background:linear-gradient(135deg,#50e3c2,#ff6ec7);
+    border:none;
+    color:white;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:bold;
 }
 
-.footer .social-icons a {
-    text-decoration: none;
-    font-size: 1.6rem;
-    margin: 0 12px;
-    display: inline-block;
-    transition: transform 0.2s;
-}
+.empty { text-align:center; color:#c9c9c9; padding:36px; background:#0f1013; border-radius:10px; }
 
-.footer .social-icons a:hover {
-    transform: translateY(-4px);
-}
-
-.footer .brand-highlight {
-    font-weight: bold;
-    color: #000;
-}
 </style>
 </head>
 <body>
 
-<!-- Floating Techy Dots Background -->
-<div class="floating-dots">
-    <span></span><span></span><span></span><span></span><span></span><span></span>
-</div>
+<!-- Floating Dots -->
+<div class="floating-dots"><span></span><span></span><span></span><span></span><span></span></div>
 
 <!-- Top Navigation -->
 <div class="top-left-nav">
-    <a href="login.html" class="btn small-btn">Login</a>
-    <a href="register.html" class="btn small-btn">Register</a>
-    <button id="theme-toggle" class="btn small-btn"></button>
+    <a href="dashboard.html" class="btn small-btn">Dashboard</a>
+    <button id="theme-toggle" class="btn small-btn">☀️</button>
 </div>
 
-<!-- Header -->
 <header class="header">
-    <h1>Moora Studio</h1>
-    <p class="tagline">Your One-Stop Template Marketplace</p>
+    <h1>Inbox</h1>
+    <p class="tagline">View and manage your messages</p>
 </header>
 
-<!-- Features Section -->
-<section class="features">
-    <h2>Why Choose Moora Studio?</h2>
-    <div class="feature-cards">
-        <div class="feature-card">
-            <div class="feature-icon">⭐</div>
-            <h3>High-Quality Templates</h3>
-            <p>Professionally crafted for presentations, business, and personal use.</p>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">💰</div>
-            <h3>Affordable Pricing</h3>
-            <p>Premium quality without the premium cost.</p>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">⚙️</div>
-            <h3>Easy to Customize</h3>
-            <p>Fully editable to match your goals effortlessly.</p>
-        </div>
-    </div>
-</section>
+<section class="inbox-container" id="inboxContainer"></section>
 
-<!-- What We Offer -->
-<section class="what-we-offer">
-    <h2>What We Offer</h2>
-    <div class="offer-cards">
-        <div class="offer-card"><div class="offer-icon large-icon">💼</div><h3>Business Templates</h3><p class="template-price">R250</p></div>
-        <div class="offer-card"><div class="offer-icon large-icon">🎨</div><h3>Portfolio Templates</h3><p class="template-price">R200</p></div>
-        <div class="offer-card"><div class="offer-icon large-icon">🌐</div><h3>Landing Pages</h3><p class="template-price">R300</p></div>
-        <div class="offer-card"><div class="offer-icon large-icon">📣</div><h3>Marketing Materials</h3><p class="template-price">R180</p></div>
-        <div class="offer-card"><div class="offer-icon large-icon">📝</div><h3>CV Creation</h3><p class="template-price">R100</p></div>
-        <div class="offer-card"><div class="offer-icon large-icon">🎓</div><h3>University Application</h3><p class="template-price">R150</p></div>
-        <div class="offer-card"><div class="offer-icon large-icon">📊</div><h3>Report Templates</h3><p class="template-price">R120</p></div>
-        <div class="offer-card"><div class="offer-icon large-icon">💻</div><h3>Web Templates</h3><p class="template-price">R350</p></div>
-    </div>
-</section>
-
-<!-- CTA Section -->
-<section class="cta">
-    <h2>Ready to Get Started?</h2>
-    <a href="register.html" class="btn btn-large cta-btn">Register Now</a>
-</section>
-
-<!-- Footer -->
 <footer class="footer">
     <p><strong>Contact Us</strong></p>
     <p>🌺 Name: Thabiso Mosesi</p>
@@ -128,29 +88,85 @@
 </footer>
 
 <script>
+// Theme toggle
 const themeToggle = document.getElementById("theme-toggle");
+const savedTheme = localStorage.getItem("theme") || "dark";
+if(savedTheme==="light"){ document.body.classList.add("light-theme"); themeToggle.textContent="🌙"; } 
+else { themeToggle.textContent="☀️"; }
 
-// Default light mode on landing page
-const savedTheme = localStorage.getItem("theme") || "light";
-if(savedTheme === "light") {
-    document.body.classList.add("light-theme");
-    themeToggle.textContent = "🌙"; // switch to dark
-} else {
-    document.body.classList.remove("light-theme");
-    themeToggle.textContent = "☀️"; // switch to light
+themeToggle.addEventListener("click", ()=>{
+    document.body.classList.toggle("light-theme");
+    if(document.body.classList.contains("light-theme")){ themeToggle.textContent="🌙"; localStorage.setItem("theme","light"); }
+    else { themeToggle.textContent="☀️"; localStorage.setItem("theme","dark"); }
+});
+
+// Load user
+const user = JSON.parse(sessionStorage.getItem("user"));
+if(!user) window.location.href = "login.html";
+
+// Load inbox
+const inboxContainer = document.getElementById("inboxContainer");
+function loadInbox(){
+    const inbox = JSON.parse(localStorage.getItem("inbox") || "[]");
+    const myMessages = inbox.filter(m=>m.email===user.email);
+    inboxContainer.innerHTML="";
+    if(myMessages.length===0){ inboxContainer.innerHTML="<div class='empty'>No messages yet.</div>"; return; }
+
+    myMessages.forEach((msg,index)=>{
+        const div = document.createElement("div");
+        div.className="inbox-card";
+
+        // User voice
+        const userVoice = msg.voice ? `<div class="voice-container">
+            <audio controls src="${msg.voice}"></audio>
+            <button onclick="deleteVoice(${index},'voice')">Delete VC</button>
+        </div>` : "";
+
+        // Admin voice
+        const adminVoice = msg.adminVoice ? `<div class="voice-container">
+            <audio controls src="${msg.adminVoice}"></audio>
+            <button onclick="deleteVoice(${index},'adminVoice')">Delete Admin VC</button>
+        </div>` : "";
+
+        // Editable message
+        const messageText = `<textarea id="msg-${index}">${msg.message}</textarea>
+            <button class="send-btn" onclick="saveMessage(${index})">Save Changes</button>`;
+
+        div.innerHTML = `
+            <p><strong>Templates:</strong> ${msg.templates ? msg.templates.join(" | ") : "(none)"}</p>
+            ${messageText}
+            ${userVoice}
+            ${adminVoice}
+            <p><strong>Admin Reply:</strong> ${msg.reply || "No reply yet"}</p>
+        `;
+
+        inboxContainer.appendChild(div);
+    });
 }
 
-// Toggle theme
-themeToggle.addEventListener("click", () => {
-    document.body.classList.toggle("light-theme");
-    if(document.body.classList.contains("light-theme")){
-        themeToggle.textContent = "🌙";
-        localStorage.setItem("theme","light");
-    } else {
-        themeToggle.textContent = "☀️";
-        localStorage.setItem("theme","dark");
-    }
-});
+function saveMessage(index){
+    const inbox = JSON.parse(localStorage.getItem("inbox")||"[]");
+    const myMessages = inbox.filter(m=>m.email===user.email);
+    const msg = myMessages[index];
+    const realIndex = inbox.findIndex(m=>m.sentAt===msg.sentAt);
+    const textarea = document.getElementById(`msg-${index}`);
+    inbox[realIndex].message = textarea.value.trim();
+    localStorage.setItem("inbox",JSON.stringify(inbox));
+    alert("Message updated!");
+}
+
+function deleteVoice(index,type){
+    if(!confirm("Delete this voice note?")) return;
+    const inbox = JSON.parse(localStorage.getItem("inbox")||"[]");
+    const myMessages = inbox.filter(m=>m.email===user.email);
+    const msg = myMessages[index];
+    const realIndex = inbox.findIndex(m=>m.sentAt===msg.sentAt);
+    inbox[realIndex][type]=null;
+    localStorage.setItem("inbox",JSON.stringify(inbox));
+    loadInbox();
+}
+
+loadInbox();
 </script>
 
 </body>
