@@ -8,28 +8,30 @@
 <style>
 /* Dashboard Specific Styles */
 .dashboard-container { max-width:1100px; margin:2em auto; padding:0 20px; }
-
 .dashboard-section { margin-bottom:2em; }
 .dashboard-cards { display:flex; flex-wrap:wrap; gap:16px; margin-top:1em; }
 .dashboard-card { background: #1c1c27; border-radius:12px; padding:1em; flex:1 1 200px; cursor:pointer; color:#fff; text-align:center; }
 .dashboard-card.selected-template { border:2px solid #ff6ec7; background:#29293f; }
-
 .template-price { margin-top:6px; font-size:0.95rem; color:#ffd6f0; }
 
 /* Message Box */
 #messageBox { width:100%; min-height:100px; padding:10px; border-radius:10px; border:1px solid #333; background:#0f0f15; color:#eee; resize:vertical; font-size:1rem; }
-
 #guidanceMsg { margin:0.5em 0 1em 0; font-size:1rem; color:#ff6ec7; }
 
-/* Voice note upload */
+/* Voice note controls */
 .voice-container { margin-top:0.5em; display:flex; align-items:center; gap:10px; }
-.voice-container audio { height:40px; }
-.voice-container button { padding:4px 8px; background:#ff4d4d; border:none; color:#fff; border-radius:6px; cursor:pointer; font-size:0.8rem; }
+.voice-container button { padding:6px 12px; background:#ff4d4d; border:none; color:#fff; border-radius:6px; cursor:pointer; font-size:0.8rem; }
+.voice-container audio { width:100%; margin-top:6px; height:40px; }
 
 .send-btn { margin-top:8px; padding:8px 16px; background:linear-gradient(135deg,#50e3c2,#ff6ec7); border:none; color:white; border-radius:8px; font-weight:bold; cursor:pointer; }
 
-@media (max-width:720px){ .dashboard-cards { flex-direction:column; } }
+#inboxContainer { margin-top:1em; }
 
+.inbox-card { background:#29293f; padding:10px; border-radius:10px; margin-bottom:10px; }
+.inbox-card textarea { width:100%; min-height:60px; border-radius:6px; padding:6px; margin-top:4px; background:#1c1c27; border:1px solid #333; color:#fff; resize:vertical; }
+.inbox-card button { margin-top:4px; margin-right:4px; padding:4px 8px; border:none; border-radius:6px; cursor:pointer; }
+
+@media (max-width:720px){ .dashboard-cards { flex-direction:column; } }
 </style>
 </head>
 <body>
@@ -52,27 +54,37 @@
 
 <section class="dashboard-container">
 
+    <!-- Templates Section -->
     <div class="dashboard-section">
         <h2>Available Templates</h2>
         <p>Select any template(s) (multiple allowed, no duplicates):</p>
         <div class="dashboard-cards" id="templatesContainer"></div>
     </div>
 
+    <!-- Message / Voice Section -->
     <div class="dashboard-section">
         <h2>Your Message</h2>
-        <p id="guidanceMsg">Write your message below. You can also attach a voice note.</p>
+        <p id="guidanceMsg">Write your message below. You can also record a voice note.</p>
         <div class="dashboard-card">
             <h3 id="currentTemplate">No template selected</h3>
             <textarea id="messageBox" placeholder="Write your message here..."></textarea>
 
-            <!-- Voice note upload -->
+            <!-- Voice record controls -->
             <div class="voice-container">
-                <input type="file" id="voiceInput" accept="audio/*">
+                <button id="recordBtn">Record</button>
+                <button id="stopBtn" disabled>Stop</button>
                 <button id="deleteVoiceBtn">Delete Voice Note</button>
+                <audio id="audioPreview" controls style="display:none;"></audio>
             </div>
 
             <button class="send-btn" id="sendMessageBtn">Send Message</button>
         </div>
+    </div>
+
+    <!-- Inbox Section -->
+    <div class="dashboard-section">
+        <h2>Your Inbox</h2>
+        <div id="inboxContainer"></div>
     </div>
 
 </section>
@@ -92,7 +104,7 @@
 </footer>
 
 <script>
-// Theme toggle
+// --- Theme ---
 const themeToggle = document.getElementById("theme-toggle");
 const savedTheme = localStorage.getItem("theme") || "dark";
 if(savedTheme==="light"){ document.body.classList.add("light-theme"); themeToggle.textContent="🌙"; } 
@@ -103,18 +115,18 @@ themeToggle.addEventListener("click", ()=>{
     else { themeToggle.textContent="☀️"; localStorage.setItem("theme","dark"); }
 });
 
-// Logout
+// --- Logout ---
 document.getElementById("logoutBtn").addEventListener("click",()=>{
     sessionStorage.clear();
     window.location.href="login.html";
 });
 
-// Load user
+// --- User ---
 const user = JSON.parse(sessionStorage.getItem("user"));
 if(!user) window.location.href="login.html";
 else document.getElementById("userName").textContent=user.name||"User";
 
-// Templates
+// --- Templates ---
 let templates = [
     {name:"Business Templates", icon:"💼"},
     {name:"Portfolio Templates", icon:"🎨"},
@@ -125,11 +137,9 @@ let templates = [
     {name:"Report Templates", icon:"📊"},
     {name:"Web Templates", icon:"💻"}
 ];
-
 let selectedTemplates = [];
 const templatesContainer = document.getElementById("templatesContainer");
 const currentTemplate = document.getElementById("currentTemplate");
-
 function renderTemplates(){
     templatesContainer.innerHTML="";
     templates.forEach((tpl)=>{
@@ -147,56 +157,111 @@ function renderTemplates(){
 }
 renderTemplates();
 
-// Voice note handling
-let voiceFile=null;
-const voiceInput = document.getElementById("voiceInput");
+// --- Voice Recorder ---
+let mediaRecorder, audioChunks=[], audioURL;
+const recordBtn = document.getElementById("recordBtn");
+const stopBtn = document.getElementById("stopBtn");
 const deleteVoiceBtn = document.getElementById("deleteVoiceBtn");
-voiceInput.addEventListener("change", ()=>{
-    if(voiceInput.files.length>0) voiceFile=voiceInput.files[0];
+const audioPreview = document.getElementById("audioPreview");
+
+recordBtn.addEventListener("click", async ()=>{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.start();
+    recordBtn.disabled=true; stopBtn.disabled=false;
+    audioChunks=[];
+    mediaRecorder.addEventListener("dataavailable", e=> audioChunks.push(e.data));
+    mediaRecorder.addEventListener("stop", ()=>{
+        const blob = new Blob(audioChunks,{type:'audio/webm'});
+        audioURL = URL.createObjectURL(blob);
+        audioPreview.src = audioURL;
+        audioPreview.style.display='block';
+    });
 });
+
+stopBtn.addEventListener("click", ()=>{
+    mediaRecorder.stop();
+    recordBtn.disabled=false; stopBtn.disabled=true;
+});
+
 deleteVoiceBtn.addEventListener("click", ()=>{
-    voiceFile=null;
-    voiceInput.value="";
-    alert("Voice note removed.");
+    audioURL=null;
+    audioPreview.src="";
+    audioPreview.style.display="none";
 });
 
-// Send message
-document.getElementById("sendMessageBtn").addEventListener("click",()=>{
-    const msgText = document.getElementById("messageBox").value.trim();
+// --- Inbox / Send Message ---
+const messageBox=document.getElementById("messageBox");
+const sendMessageBtn=document.getElementById("sendMessageBtn");
+const inboxContainer=document.getElementById("inboxContainer");
+
+function renderInbox(){
+    const inbox = JSON.parse(localStorage.getItem("inbox")||'[]').filter(m=>m.email===user.email);
+    inboxContainer.innerHTML="";
+    if(inbox.length===0){ inboxContainer.innerHTML="<p>No messages yet.</p>"; return; }
+    inbox.forEach((m,i)=>{
+        const div=document.createElement("div");
+        div.className="inbox-card";
+        div.innerHTML=`
+            <p><strong>Status:</strong> ${m.reply?'Replied':'Pending'}</p>
+            <p><strong>Templates:</strong> ${m.templates.join(" | ")}</p>
+            ${m.message? `<p>${m.message}</p>`:``}
+            ${m.voice? `<audio controls src="${m.voice}"></audio>`:``}
+            <textarea id="edit-${i}">${m.message||''}</textarea>
+            <button onclick="updateMessage(${i})">Update</button>
+            <button onclick="deleteMessage(${i})">Delete</button>
+        `;
+        inboxContainer.appendChild(div);
+    });
+}
+
+function updateMessage(idx){
+    const inbox = JSON.parse(localStorage.getItem("inbox")||'[]');
+    const filtered = inbox.filter(m=>m.email===user.email);
+    const msgIndex = inbox.indexOf(filtered[idx]);
+    inbox[msgIndex].message = document.getElementById(`edit-${idx}`).value.trim();
+    localStorage.setItem('inbox',JSON.stringify(inbox));
+    renderInbox();
+}
+
+function deleteMessage(idx){
+    const inbox = JSON.parse(localStorage.getItem("inbox")||'[]');
+    const filtered = inbox.filter(m=>m.email===user.email);
+    const msgIndex = inbox.indexOf(filtered[idx]);
+    inbox.splice(msgIndex,1);
+    localStorage.setItem('inbox',JSON.stringify(inbox));
+    renderInbox();
+}
+
+sendMessageBtn.addEventListener('click', ()=>{
+    const text = messageBox.value.trim();
     if(selectedTemplates.length===0){ alert("Select at least one template."); return; }
-    if(!msgText && !voiceFile){ alert("Message or voice note required."); return; }
+    if(!text && !audioURL){ alert("Message or voice required."); return; }
 
-    // Save voice as Data URL
-    if(voiceFile){
-        const reader = new FileReader();
-        reader.onload = function(e){
-            saveMessage(msgText, e.target.result);
-        }
-        reader.readAsDataURL(voiceFile);
-    } else saveMessage(msgText,null);
-});
-
-function saveMessage(text,voice){
-    const inbox = JSON.parse(localStorage.getItem("inbox")||"[]");
+    const inbox = JSON.parse(localStorage.getItem("inbox")||'[]');
     inbox.push({
         user: user.name,
         email: user.email,
         templates: [...selectedTemplates],
-        message: text,
-        voice: voice || null,
+        message: text||null,
+        voice: audioURL||null,
         reply: null,
         adminVoice: null,
         sentAt: new Date().toISOString()
     });
-    localStorage.setItem("inbox",JSON.stringify(inbox));
+    localStorage.setItem('inbox',JSON.stringify(inbox));
+
     alert("Message sent!");
-    document.getElementById("messageBox").value="";
-    voiceFile=null;
-    voiceInput.value="";
+    messageBox.value="";
+    audioURL=null;
+    audioPreview.src=""; audioPreview.style.display="none";
     selectedTemplates=[];
     currentTemplate.textContent="No template selected";
     renderTemplates();
-}
+    renderInbox();
+});
+
+renderInbox();
 </script>
 
 </body>
