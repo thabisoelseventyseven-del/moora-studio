@@ -5,292 +5,271 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Admin Panel - Moora Studio</title>
 <link rel="stylesheet" href="style.css">
-
 <style>
-/* Admin panel — inline styles to complement style.css */
-.admin-header {
-  padding: 42px 20px;
-  text-align: center;
-  background: linear-gradient(135deg,#0d0d12,#1a1a28);
-  color: white;
-}
-.admin-header h1{ margin:0; font-size:2.2rem; }
-.admin-container { max-width:1100px; margin:30px auto; padding: 0 20px 60px; }
-
-.admin-controls {
-  display:flex;
-  gap:10px;
-  justify-content:flex-end;
-  margin-bottom:16px;
-  align-items:center;
-}
-
-.admin-card {
-  background: linear-gradient(180deg,#11111a,#0f0f15);
-  border-radius:12px;
-  padding:18px;
-  margin-bottom:18px;
-  box-shadow:0 6px 18px rgba(0,0,0,0.35);
-  border-left:6px solid #ff6ec7;
-  color: #eaeaea;
-}
-
-.admin-card h3 { margin:0 0 6px 0; font-size:1.15rem; color:#ffd6f0; }
-.meta { font-size:0.9rem; color:#bfc7d1; margin-bottom:8px; }
-
+/* Admin panel inline styling */
+body { font-family: Arial, sans-serif; background:#0f0f15; color:#eee; margin:0; }
+.header { text-align:center; padding:18px; }
+.controls { display:flex; gap:12px; padding:12px 20px; align-items:center; justify-content:flex-end; }
+.btn { background:linear-gradient(135deg,#50e3c2,#ff6ec7); color:#fff; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; }
+.admin-container { max-width:1100px; margin:12px auto; padding:0 20px 60px; }
+.admin-card { background:linear-gradient(180deg,#11111a,#0f0f15); border-radius:12px; padding:14px; margin-bottom:12px; border-left:6px solid #ff6ec7; color:#eaeaea; }
+.meta { font-size:0.9rem; color:#bfc7d1; margin-bottom:6px; }
 .message-body { background:#0b0b11; padding:12px; border-radius:8px; color:#ddd; margin-bottom:10px; white-space:pre-wrap; }
-.reply-box { margin-top:10px; display:flex; gap:10px; align-items:flex-start; }
-.reply-textarea {
-  width:100%;
-  min-height:88px;
-  padding:12px;
-  border-radius:8px;
-  border:1px solid #333;
-  background:#0f0f15;
-  color:#eee;
-  resize:vertical;
-  font-size:0.95rem;
-}
-.reply-btn { padding:10px 14px; background:linear-gradient(135deg,#50e3c2,#ff6ec7); border:none; color:white; border-radius:8px; font-weight:bold; cursor:pointer; }
-.del-btn { padding:8px 12px; background:#ff6e6e; border:none; color:white; border-radius:8px; cursor:pointer; }
-
-.status-pill { display:inline-block; padding:6px 10px; border-radius:999px; font-weight:700; font-size:0.79rem; margin-left:10px; }
+.reply-area { display:flex; gap:12px; margin-top:8px; align-items:flex-start; }
+.reply-text { width:60%; min-height:80px; padding:8px; border-radius:8px; background:#0f0f15; color:#fff; border:1px solid #333; }
+.voice-controls { display:flex; flex-direction:column; gap:8px; }
+.small-audio { width:250px; }
+.delete-btn { background:#ff4d4d; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
+.user-block { display:flex; gap:12px; align-items:center; justify-content:space-between; }
+.logged-list { margin-bottom:14px; }
+.status-pill { display:inline-block; padding:6px 10px; border-radius:999px; font-weight:700; }
 .pending { background:orange; color:black; }
 .replied { background:#66ff99; color:black; }
-
-.empty { text-align:center; color:#c9c9c9; padding:36px; background:#0f1013; border-radius:10px; }
-
-/* responsive */
-@media (max-width:720px){
-  .admin-controls { justify-content:center; flex-wrap:wrap; }
-  .reply-box { flex-direction:column; }
-}
+.count-badge { background:#ffd6f0; color:#000; padding:4px 8px; border-radius:8px; font-weight:700; margin-left:8px; }
 </style>
 </head>
 <body>
 
-<!-- Top nav -->
-<div class="top-left-nav" style="position:static;padding:12px 20px;background:transparent;">
-  <a href="dashboard.html" class="btn small-btn">Dashboard</a>
-  <a href="inbox.html" class="btn small-btn">Inbox</a>
-  <button id="theme-toggle" class="btn small-btn">☀️</button>
-  <button id="logoutBtn" class="btn small-btn" style="margin-left:8px;">Logout</button>
+<div class="controls">
+  <button id="refreshBtn" class="btn">Refresh</button>
+  <button id="clearAllBtn" class="btn" style="background:#ff6e6e">Clear All Messages</button>
+  <button id="logoutAdmin" class="btn" style="background:#666">Logout Admin</button>
 </div>
 
-<header class="admin-header">
-  <h1>Admin Panel — User Messages</h1>
-  <p class="tagline">Reply to user messages. Replies are delivered to each user's inbox.</p>
+<header class="header">
+  <h1>Admin Panel — Messages</h1>
+  <p style="color:#bfc7d1">Manage user messages; reply by text or voice. Replies go to user's inbox only.</p>
 </header>
 
 <main class="admin-container">
-  <div class="admin-controls">
-    <input id="searchInput" placeholder="Search by name, email or template..." style="padding:10px;border-radius:8px;border:1px solid #333;background:#11111a;color:#eee;width:320px" />
-    <button id="refreshBtn" class="btn">Refresh</button>
-    <button id="clearAllBtn" class="btn" title="Delete all messages">Clear All Messages</button>
-  </div>
+  <section>
+    <h2>Logged-in Users</h2>
+    <div id="loggedUsers" class="logged-list"></div>
+  </section>
 
-  <section id="messagesList"></section>
+  <section>
+    <h2>All User Messages</h2>
+    <div id="messagesContainer"></div>
+  </section>
 </main>
 
 <script>
-// Theme toggle (keeps consistent with other pages)
-const themeToggle = document.getElementById("theme-toggle");
-if(localStorage.getItem('theme') === 'light'){
-  document.body.classList.add('light-theme');
-  themeToggle.textContent = '🌙';
-} else {
-  themeToggle.textContent = '☀️';
+/* Admin page logic (localStorage-based) */
+
+/* helpers */
+function jsonGet(key, defaultVal){ try { return JSON.parse(localStorage.getItem(key)||'null') || defaultVal; } catch(e){ return defaultVal; } }
+function jsonSet(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+
+/* Demo admin session setup if needed */
+let admin = null;
+try { admin = JSON.parse(sessionStorage.getItem('admin')); } catch(e){}
+if(!admin){
+  admin = { name: "Admin", email: "admin@moora.local" };
+  sessionStorage.setItem('admin', JSON.stringify(admin));
 }
-themeToggle.addEventListener('click', () => {
-  document.body.classList.toggle('light-theme');
-  if(document.body.classList.contains('light-theme')) {
-    themeToggle.textContent = '🌙';
-    localStorage.setItem('theme','light');
-  } else {
-    themeToggle.textContent = '☀️';
-    localStorage.setItem('theme','dark');
+
+/* show logged-in users (activeUsers stored in localStorage by login code elsewhere) */
+function renderLoggedUsers(){
+  const active = jsonGet('activeUsers', []);
+  const container = document.getElementById('loggedUsers');
+  container.innerHTML = '';
+  if(active.length === 0){
+    container.innerHTML = '<p>No users logged in.</p>';
+    return;
   }
-});
+  active.forEach((u, i) => {
+    const inbox = jsonGet('inbox', []).filter(m => m.userEmail === u.email);
+    const div = document.createElement('div');
+    div.className = 'admin-card';
+    div.innerHTML = `<div class="user-block">
+        <div>
+          <strong>${u.name}</strong> <span style="color:#bfc7d1">(${u.email})</span>
+          <span class="count-badge">${inbox.length}</span>
+        </div>
+        <div>
+          <button class="delete-btn" onclick="forceLogout(${i})">Force logout</button>
+        </div>
+    </div>`;
+    container.appendChild(div);
+  });
+}
 
-// Logout button (returns to login)
-document.getElementById('logoutBtn').addEventListener('click', () => {
-  sessionStorage.clear();
-  window.location.href = 'login.html';
-});
+/* force logout */
+window.forceLogout = function(index){
+  if(!confirm('Force logout this user?')) return;
+  const active = jsonGet('activeUsers', []);
+  active.splice(index,1);
+  jsonSet('activeUsers', active);
+  renderLoggedUsers();
+}
 
-// Core containers
-const messagesList = document.getElementById('messagesList');
-const searchInput = document.getElementById('searchInput');
-const refreshBtn = document.getElementById('refreshBtn');
-const clearAllBtn = document.getElementById('clearAllBtn');
+/* Messages list (admin sees all user messages; admin cannot choose templates) */
+const messagesContainer = document.getElementById('messagesContainer');
 
-// Load every message from localStorage inbox (this is where user messages go)
-function loadAdminMessages(filter = '') {
-  // inbox array: stored by dashboard when user sends message
-  const inbox = JSON.parse(localStorage.getItem('inbox') || '[]');
-
-  // If no messages at all
-  if(!inbox || inbox.length === 0){
-    messagesList.innerHTML = `<div class="empty">No user messages found.</div>`;
+function renderMessages(){
+  const inbox = jsonGet('inbox', []);
+  messagesContainer.innerHTML = '';
+  if(inbox.length === 0){
+    messagesContainer.innerHTML = '<p>No messages.</p>';
     return;
   }
 
-  // Optionally filter by search term
-  const q = filter.trim().toLowerCase();
-  const filtered = q ? inbox.filter(m =>
-    (m.user && m.user.toLowerCase().includes(q)) ||
-    (m.email && m.email.toLowerCase().includes(q)) ||
-    (m.templates && m.templates.join(' | ').toLowerCase().includes(q)) ||
-    (m.message && m.message.toLowerCase().includes(q))
-  ) : inbox;
-
-  // Build UI
-  messagesList.innerHTML = '';
-  filtered.forEach((msg, idx) => {
-    // Create card
+  inbox.forEach((m, idx) => {
     const card = document.createElement('div');
     card.className = 'admin-card';
 
-    // status
-    const statusHTML = msg.reply ? `<span class="status-pill replied">Replied</span>` : `<span class="status-pill pending">Pending</span>`;
+    const statusClass = m.replyText || m.adminVoice ? 'replied' : 'pending';
+    const statusLabel = m.replyText || m.adminVoice ? 'Replied' : 'Pending';
 
-    // timestamp when present
-    const ts = msg.sentAt ? ` • ${new Date(msg.sentAt).toLocaleString()}` : '';
+    // user voice small
+    const userVoiceHtml = m.userVoice ? `<div><strong>User Voice</strong><br><audio class="small-audio" controls src="${m.userVoice}"></audio>
+          <button class="delete-btn" onclick="deleteUserVoice(${idx})">Delete user VC</button></div>` : '';
+
+    const adminVoiceHtml = m.adminVoice ? `<div><strong>Admin Voice</strong><br><audio class="small-audio" controls src="${m.adminVoice}"></audio>
+          <button class="delete-btn" onclick="deleteAdminVoice(${idx})">Delete admin VC</button></div>` : '';
 
     card.innerHTML = `
-      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
-        <div style="flex:1 1 0">
-          <h3>${msg.user || 'Unknown user'} <small style="color:#b9c6d6;font-weight:600">(${msg.email || 'no-email'})</small>${statusHTML}</h3>
-          <div class="meta">Templates: ${msg.templates ? msg.templates.join(' | ') : '(none)'}${ts}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <h3 style="margin:0">${m.userName} <span style="color:#bfc7d1">(${m.userEmail})</span></h3>
+          <div class="meta">Templates: ${m.templates.join(' | ')} • ${new Date(m.sentAt).toLocaleString()}</div>
         </div>
-        <div style="text-align:right">
-          <button class="del-btn" data-index="${idx}">Delete</button>
+        <div>
+          <span class="status-pill ${statusClass}">${statusLabel}</span>
+          <button class="delete-btn" onclick="deleteMessage(${idx})">Delete message</button>
         </div>
       </div>
 
-      <div class="message-body"><strong>User message:</strong><br>${escapeHtml(msg.message || '')}</div>
+      <div class="message-body"><strong>User message:</strong><br>${m.message || '<em>(no text)</em>'}</div>
 
-      ${msg.reply ? `
-        <div class="reply-box" style="margin-bottom:8px">
-          <div style="flex:1">
-            <p><strong>Admin reply:</strong></p>
-            <p style="color:#cbeff7">${escapeHtml(msg.reply)}</p>
-          </div>
-        </div>
-      ` : ''}
+      ${userVoiceHtml}
+      ${adminVoiceHtml}
 
-      <div class="reply-box">
-        <textarea class="reply-textarea" id="reply-${idx}" placeholder="Write a reply to this user...">${msg.reply ? msg.reply : ''}</textarea>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <button class="reply-btn" data-index="${idx}">Send Reply</button>
-          <small style="color:#9aa3b2">Reply will appear in the user's inbox.</small>
+      <div style="margin-top:10px" class="reply-area">
+        <textarea id="replyText-${idx}" class="reply-text" placeholder="Write reply...">${m.replyText || ''}</textarea>
+
+        <div class="voice-controls">
+          <button id="record-${idx}" class="btn">🎤 Record reply</button>
+          <button id="stop-${idx}" class="btn" disabled>⏹ Stop</button>
+          <small style="color:#bfc7d1">Recorded admin voice will be sent to the user.</small>
         </div>
+      </div>
+
+      <div style="margin-top:10px; display:flex; gap:8px">
+        <button class="btn" onclick="sendReply(${idx})">Send Reply</button>
       </div>
     `;
 
-    messagesList.appendChild(card);
-  });
+    messagesContainer.appendChild(card);
 
-  // wire delete and reply handlers (use event delegation)
-  // Delete buttons
-  messagesList.querySelectorAll('.del-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const i = parseInt(btn.getAttribute('data-index'));
-      deleteMessageByFilteredIndex(i, filtered, inbox);
+    // attach recording handlers
+    setupAdminRecorder(idx);
+  });
+}
+
+/* Recording for admin per message */
+function setupAdminRecorder(index){
+  // set up only after element exists
+  const recBtn = document.getElementById(`record-${index}`);
+  const stopBtn = document.getElementById(`stop-${index}`);
+  // avoid multiple handlers
+  if(!recBtn || !stopBtn) return;
+
+  let recorder = null;
+  let chunks = [];
+
+  // remove previous listeners if any (defensive)
+  const recClone = recBtn.cloneNode(true);
+  recBtn.parentNode.replaceChild(recClone, recBtn);
+
+  recClone.addEventListener('click', async ()=>{
+    if(!navigator.mediaDevices?.getUserMedia){ alert('Recording not supported'); return; }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recorder = new MediaRecorder(stream);
+    chunks = [];
+    recorder.addEventListener('dataavailable', e=>chunks.push(e.data));
+    recorder.addEventListener('stop', ()=>{
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const reader = new FileReader();
+      reader.onloadend = ()=> {
+        const inbox = jsonGet('inbox', []);
+        inbox[index].adminVoice = reader.result; // base64
+        // keep replyRead false so user sees this as new
+        inbox[index].replyRead = false;
+        jsonSet('inbox', inbox);
+        // reflect immediately in UI
+        renderMessages();
+        renderLoggedUsers();
+      };
+      reader.readAsDataURL(blob);
     });
+    recorder.start();
+    recClone.disabled = true;
+    stopBtn.disabled = false;
   });
 
-  // Reply buttons
-  messagesList.querySelectorAll('.reply-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const i = parseInt(btn.getAttribute('data-index'));
-      const textarea = document.getElementById(`reply-${i}`);
-      if(!textarea) return;
-      const text = textarea.value.trim();
-      if(!text){
-        alert('Reply cannot be empty.');
-        return;
-      }
-      sendReplyToInboxMessage(filtered[i], text);
-    });
+  // stop button
+  const stopClone = stopBtn.cloneNode(true);
+  stopBtn.parentNode.replaceChild(stopClone, stopBtn);
+  stopClone.addEventListener('click', ()=> {
+    if(recorder) recorder.stop();
+    recClone.disabled = false;
+    stopClone.disabled = true;
   });
 }
 
-// Escape helper for safe rendering
-function escapeHtml(str = ''){
-  return String(str)
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;')
-    .replaceAll('"','&quot;')
-    .replaceAll("'",'&#039;')
-    .replaceAll('\n','<br>');
+/* Send reply (text + adminVoice if present) */
+window.sendReply = function(index){
+  const inbox = jsonGet('inbox', []);
+  if(!inbox[index]) return alert('Message not found');
+  const text = document.getElementById(`replyText-${index}`).value.trim();
+  if(!text && !inbox[index].adminVoice) return alert('Please add reply text or record a voice note');
+
+  inbox[index].replyText = text || null;
+  inbox[index].repliedAt = new Date().toISOString();
+  inbox[index].replyRead = false; // mark as unread for user
+  jsonSet('inbox', inbox);
+
+  alert('Reply saved — user will see it in their inbox.');
+  renderMessages();
+  renderLoggedUsers();
 }
 
-// Delete message by finding it in the real inbox array and removing it
-function deleteMessageByFilteredIndex(filteredIndex, filteredArray, fullInbox){
-  const target = filteredArray[filteredIndex];
-  if(!target) return;
-  if(!confirm('Delete this user message? This action cannot be undone.')) return;
-
-  // find index in the real inbox
-  const idx = fullInbox.findIndex(m =>
-    m.email === target.email &&
-    m.message === target.message &&
-    JSON.stringify(m.templates) === JSON.stringify(target.templates) &&
-    (m.sentAt || '') === (target.sentAt || '')
-  );
-  if(idx > -1) {
-    fullInbox.splice(idx,1);
-    localStorage.setItem('inbox', JSON.stringify(fullInbox));
-    loadAdminMessages(searchInput.value);
-    // notify: update inbox badge for users (dashboard reads inbox length)
-    alert('Message deleted.');
-  } else {
-    alert('Could not find message to delete.');
-  }
+/* Delete helpers */
+window.deleteUserVoice = function(index){
+  if(!confirm('Delete user voice?')) return;
+  const inbox = jsonGet('inbox', []);
+  if(inbox[index]) { inbox[index].userVoice = null; jsonSet('inbox', inbox); renderMessages(); }
+}
+window.deleteAdminVoice = function(index){
+  if(!confirm('Delete admin voice?')) return;
+  const inbox = jsonGet('inbox', []);
+  if(inbox[index]) { inbox[index].adminVoice = null; jsonSet('inbox', inbox); renderMessages(); }
+}
+window.deleteMessage = function(index){
+  if(!confirm('Delete this message?')) return;
+  const inbox = jsonGet('inbox', []);
+  inbox.splice(index,1);
+  jsonSet('inbox', inbox);
+  renderMessages();
+  renderLoggedUsers();
 }
 
-// When admin replies: update the inbox entry's .reply and .repliedAt
-function sendReplyToInboxMessage(targetMessage, replyText){
-  let inbox = JSON.parse(localStorage.getItem('inbox') || '[]');
-  // find message index (first match)
-  const realIndex = inbox.findIndex(m =>
-    m.email === targetMessage.email &&
-    m.message === targetMessage.message &&
-    JSON.stringify(m.templates) === JSON.stringify(targetMessage.templates) &&
-    (m.sentAt || '') === (targetMessage.sentAt || '')
-  );
-
-  if(realIndex === -1){
-    alert('Message not found (may have been deleted). Refreshing list.');
-    loadAdminMessages(searchInput.value);
-    return;
-  }
-
-  inbox[realIndex].reply = replyText;
-  inbox[realIndex].repliedAt = new Date().toISOString();
-  localStorage.setItem('inbox', JSON.stringify(inbox));
-
-  alert('Reply saved and will appear in the user inbox.');
-  loadAdminMessages(searchInput.value);
-  // optional: you could implement a small log or send a notification
-}
-
-// Refresh / search handlers
-refreshBtn.addEventListener('click', () => loadAdminMessages(searchInput.value));
-searchInput.addEventListener('input', () => loadAdminMessages(searchInput.value));
-
-// Clear all (admin action)
-clearAllBtn.addEventListener('click', () => {
-  if(!confirm('Clear ALL inbox messages? This cannot be undone.')) return;
-  localStorage.removeItem('inbox');
-  loadAdminMessages();
+/* Clear all messages */
+document.getElementById('clearAllBtn').addEventListener('click', ()=>{
+  if(!confirm('Clear all messages?')) return;
+  jsonSet('inbox', []);
+  renderMessages();
+  renderLoggedUsers();
 });
 
-// initial load
-loadAdminMessages();
-</script>
+/* Refresh and logout */
+document.getElementById('refreshBtn').addEventListener('click', ()=>{ renderMessages(); renderLoggedUsers(); });
+document.getElementById('logoutAdmin').addEventListener('click', ()=>{ sessionStorage.removeItem('admin'); alert('Admin signed out'); window.location.href = 'login.html'; });
 
+/* initial render */
+renderLoggedUsers();
+renderMessages();
+</script>
 </body>
 </html>
