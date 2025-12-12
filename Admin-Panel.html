@@ -9,14 +9,17 @@
 .admin-card { background:#1c1c27; padding:1.2em; margin:1em 0; border-radius:12px; color:#fff; border:1px solid #333; }
 .admin-card h3 { color:#ff6ec7; }
 textarea { width:100%; height:100px; margin-top:0.7em; }
+.voice-controls { display:flex; gap:12px; margin-top:8px; align-items:center; }
+.voice-controls button { padding:8px 14px; background:linear-gradient(135deg,#50e3c2,#ff6ec7); border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold; }
 .voice-play { margin-top:8px; }
+.delete-btn { background:#ff4d4d; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; margin-left:6px; }
 </style>
 </head>
 <body>
 
 <header class="header">
     <h1>Admin Panel</h1>
-    <p>Reply to user messages</p>
+    <p>Reply to user messages with text or voice notes</p>
 </header>
 
 <section class="dashboard-container">
@@ -25,41 +28,122 @@ textarea { width:100%; height:100px; margin-top:0.7em; }
 </section>
 
 <script>
+const adminMessagesContainer = document.getElementById("adminMessagesContainer");
+
 function loadUserMessages(){
-    const msgs = JSON.parse(localStorage.getItem("inbox") || "[]");
-    const container = document.getElementById("adminMessagesContainer");
-    container.innerHTML = "";
+    const inbox = JSON.parse(localStorage.getItem("inbox") || "[]");
+    adminMessagesContainer.innerHTML = "";
 
-    if(msgs.length===0){ container.innerHTML="<p>No messages found.</p>"; return; }
+    if(inbox.length===0){ adminMessagesContainer.innerHTML="<p>No messages found.</p>"; return; }
 
-    msgs.forEach((msg,index)=>{
+    inbox.forEach((msg,index)=>{
         const div=document.createElement("div");
         div.classList.add("admin-card");
 
-        const voiceHTML = msg.voice ? `<div class="voice-play"><strong>Voice Note:</strong><br><audio controls src="${msg.voice}"></audio></div>` : "";
+        const userVoiceHTML = msg.voice ? `<div class="voice-play"><strong>User Voice Note:</strong><br>
+            <audio controls src="${msg.voice}"></audio>
+            <button class="delete-btn" onclick="deleteUserVoice(${index})">Delete User VC</button>
+        </div>` : "";
+
+        const adminVoiceHTML = msg.adminVoice ? `<div class="voice-play"><strong>Admin Reply Voice Note:</strong><br>
+            <audio controls src="${msg.adminVoice}"></audio>
+            <button class="delete-btn" onclick="deleteAdminVoice(${index})">Delete Admin VC</button>
+        </div>` : "";
 
         div.innerHTML=`
             <h3>${msg.user} (${msg.email})</h3>
             <p><strong>Templates:</strong> ${msg.templates.join(" | ")}</p>
             <p>${msg.message}</p>
-            ${voiceHTML}
-            <textarea id="reply-${index}" placeholder="Write reply...">${msg.reply?msg.reply:""}</textarea>
+            ${userVoiceHTML}
+            ${adminVoiceHTML}
+            
+            <textarea id="replyText-${index}" placeholder="Write reply...">${msg.reply?msg.reply:""}</textarea>
+
+            <div class="voice-controls">
+                <button id="recordBtn-${index}">🎤 Record Reply VC</button>
+                <button id="stopBtn-${index}" disabled>⏹ Stop & Save</button>
+                <audio id="voicePreview-${index}" controls style="display:none;margin-top:10px;"></audio>
+            </div>
+            
             <button class="btn" onclick="sendReply(${index})">Send Reply</button>
         `;
-        container.appendChild(div);
+        adminMessagesContainer.appendChild(div);
+
+        // Voice note recording for this message
+        setupVoiceRecording(index);
     });
 }
 
-function sendReply(index){
-    const textarea=document.getElementById(`reply-${index}`);
-    const replyText=textarea.value.trim();
-    if(!replyText){ alert("Reply cannot be empty."); return; }
+// Voice recording setup per message
+function setupVoiceRecording(index){
+    let mediaRecorder, audioChunks=[];
+    const recordBtn = document.getElementById(`recordBtn-${index}`);
+    const stopBtn = document.getElementById(`stopBtn-${index}`);
+    const voicePreview = document.getElementById(`voicePreview-${index}`);
 
+    recordBtn.addEventListener("click", async ()=>{
+        if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+            alert("Your browser does not support audio recording.");
+            return;
+        }
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks=[];
+        mediaRecorder.addEventListener("dataavailable", e=>audioChunks.push(e.data));
+        mediaRecorder.addEventListener("stop", ()=>{
+            const blob = new Blob(audioChunks, { type: 'audio/mp3' });
+            const url = URL.createObjectURL(blob);
+            voicePreview.src=url; voicePreview.style.display="block";
+            const reader = new FileReader();
+            reader.onloadend=()=>{ 
+                let inbox = JSON.parse(localStorage.getItem("inbox") || "[]");
+                inbox[index].adminVoice = reader.result;
+                localStorage.setItem("inbox", JSON.stringify(inbox));
+            };
+            reader.readAsDataURL(blob);
+        });
+        mediaRecorder.start();
+        recordBtn.disabled=true;
+        stopBtn.disabled=false;
+    });
+
+    stopBtn.addEventListener("click", ()=>{
+        mediaRecorder.stop();
+        recordBtn.disabled=false;
+        stopBtn.disabled=true;
+    });
+}
+
+// Send text reply only
+function sendReply(index){
+    const replyText = document.getElementById(`replyText-${index}`).value.trim();
     let inbox = JSON.parse(localStorage.getItem("inbox") || "[]");
+    if(!replyText && !inbox[index].adminVoice){
+        alert("Add a text reply or record a voice note.");
+        return;
+    }
     inbox[index].reply = replyText;
     inbox[index].repliedAt = new Date().toISOString();
     localStorage.setItem("inbox", JSON.stringify(inbox));
     alert("Reply saved. User can see it in their inbox.");
+    loadUserMessages();
+}
+
+// Delete user voice note
+function deleteUserVoice(index){
+    if(!confirm("Delete this user's voice note?")) return;
+    let inbox = JSON.parse(localStorage.getItem("inbox") || "[]");
+    inbox[index].voice=null;
+    localStorage.setItem("inbox", JSON.stringify(inbox));
+    loadUserMessages();
+}
+
+// Delete admin voice note
+function deleteAdminVoice(index){
+    if(!confirm("Delete this admin reply voice note?")) return;
+    let inbox = JSON.parse(localStorage.getItem("inbox") || "[]");
+    inbox[index].adminVoice=null;
+    localStorage.setItem("inbox", JSON.stringify(inbox));
     loadUserMessages();
 }
 
