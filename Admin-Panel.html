@@ -1,182 +1,275 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Admin Panel - Moora Studio</title>
 <link rel="stylesheet" href="style.css">
 <style>
-.admin-card { background:#1c1c27; padding:1.2em; margin:1em 0; border-radius:12px; color:#fff; border:1px solid #333; }
-.admin-card h3 { color:#ff6ec7; margin-bottom:0.5em; }
-textarea { width:100%; height:80px; margin-top:0.7em; border-radius:8px; padding:6px; background:#1c1c27; color:#fff; border:1px solid #333; resize:vertical; }
-.voice-controls { display:flex; gap:12px; margin-top:8px; align-items:center; }
-.voice-controls button { padding:8px 14px; background:linear-gradient(135deg,#50e3c2,#ff6ec7); border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold; }
-.voice-play { margin-top:8px; }
-.delete-btn { background:#ff4d4d; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; margin-left:6px; }
-.status { font-weight:bold; color:#50e3c2; margin-bottom:4px; }
-#loggedUsers { margin-bottom:1em; }
-.message-count { font-size:0.9rem; color:#ffd6f0; margin-left:10px; }
+/* Admin panel inline styling */
+body { font-family: Arial, sans-serif; background:#0f0f15; color:#eee; margin:0; }
+.header { text-align:center; padding:18px; }
+.controls { display:flex; gap:12px; padding:12px 20px; align-items:center; justify-content:flex-end; }
+.btn { background:linear-gradient(135deg,#50e3c2,#ff6ec7); color:#fff; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; }
+.admin-container { max-width:1100px; margin:12px auto; padding:0 20px 60px; }
+.admin-card { background:linear-gradient(180deg,#11111a,#0f0f15); border-radius:12px; padding:14px; margin-bottom:12px; border-left:6px solid #ff6ec7; color:#eaeaea; }
+.meta { font-size:0.9rem; color:#bfc7d1; margin-bottom:6px; }
+.message-body { background:#0b0b11; padding:12px; border-radius:8px; color:#ddd; margin-bottom:10px; white-space:pre-wrap; }
+.reply-area { display:flex; gap:12px; margin-top:8px; align-items:flex-start; }
+.reply-text { width:60%; min-height:80px; padding:8px; border-radius:8px; background:#0f0f15; color:#fff; border:1px solid #333; }
+.voice-controls { display:flex; flex-direction:column; gap:8px; }
+.small-audio { width:250px; }
+.delete-btn { background:#ff4d4d; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
+.user-block { display:flex; gap:12px; align-items:center; justify-content:space-between; }
+.logged-list { margin-bottom:14px; }
+.status-pill { display:inline-block; padding:6px 10px; border-radius:999px; font-weight:700; }
+.pending { background:orange; color:black; }
+.replied { background:#66ff99; color:black; }
+.count-badge { background:#ffd6f0; color:#000; padding:4px 8px; border-radius:8px; font-weight:700; margin-left:8px; }
 </style>
 </head>
 <body>
 
+<div class="controls">
+  <button id="refreshBtn" class="btn">Refresh</button>
+  <button id="clearAllBtn" class="btn" style="background:#ff6e6e">Clear All Messages</button>
+  <button id="logoutAdmin" class="btn" style="background:#666">Logout Admin</button>
+</div>
+
 <header class="header">
-    <h1>Admin Panel</h1>
-    <p>Reply to user messages with text or voice notes</p>
+  <h1>Admin Panel — Messages</h1>
+  <p style="color:#bfc7d1">Manage user messages; reply by text or voice. Replies go to user's inbox only.</p>
 </header>
 
-<section class="dashboard-container">
-    <h2>Logged-In Users</h2>
-    <div id="loggedUsers"></div>
+<main class="admin-container">
+  <section>
+    <h2>Logged-in Users</h2>
+    <div id="loggedUsers" class="logged-list"></div>
+  </section>
 
-    <h2>User Messages</h2>
-    <div id="adminMessagesContainer"></div>
-</section>
+  <section>
+    <h2>All User Messages</h2>
+    <div id="messagesContainer"></div>
+  </section>
+</main>
 
 <script>
-// --- Track logged-in users ---
-const loggedUsersContainer = document.getElementById("loggedUsers");
-function showLoggedUsers(){
-    let sessions = JSON.parse(localStorage.getItem("activeUsers")||"[]");
-    loggedUsersContainer.innerHTML="";
-    if(sessions.length===0){ loggedUsersContainer.innerHTML="<p>No users online.</p>"; return; }
-    sessions.forEach((u,i)=>{
-        const div=document.createElement("div");
-        div.className="admin-card";
-        const inbox = JSON.parse(localStorage.getItem("inbox")||'[]');
-        const userMessages = inbox.filter(m=>m.email===u.email);
-        div.innerHTML=`<h3>${u.name} (${u.email})</h3>
-            <span class="message-count">Messages: ${userMessages.length}</span>
-            <button class="delete-btn" onclick="deleteUser(${i})">Force Logout</button>`;
-        loggedUsersContainer.appendChild(div);
+/* Admin page logic (localStorage-based) */
+
+/* helpers */
+function jsonGet(key, defaultVal){ try { return JSON.parse(localStorage.getItem(key)||'null') || defaultVal; } catch(e){ return defaultVal; } }
+function jsonSet(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+
+/* Demo admin session setup if needed */
+let admin = null;
+try { admin = JSON.parse(sessionStorage.getItem('admin')); } catch(e){}
+if(!admin){
+  admin = { name: "Admin", email: "admin@moora.local" };
+  sessionStorage.setItem('admin', JSON.stringify(admin));
+}
+
+/* show logged-in users (activeUsers stored in localStorage by login code elsewhere) */
+function renderLoggedUsers(){
+  const active = jsonGet('activeUsers', []);
+  const container = document.getElementById('loggedUsers');
+  container.innerHTML = '';
+  if(active.length === 0){
+    container.innerHTML = '<p>No users logged in.</p>';
+    return;
+  }
+  active.forEach((u, i) => {
+    const inbox = jsonGet('inbox', []).filter(m => m.userEmail === u.email);
+    const div = document.createElement('div');
+    div.className = 'admin-card';
+    div.innerHTML = `<div class="user-block">
+        <div>
+          <strong>${u.name}</strong> <span style="color:#bfc7d1">(${u.email})</span>
+          <span class="count-badge">${inbox.length}</span>
+        </div>
+        <div>
+          <button class="delete-btn" onclick="forceLogout(${i})">Force logout</button>
+        </div>
+    </div>`;
+    container.appendChild(div);
+  });
+}
+
+/* force logout */
+window.forceLogout = function(index){
+  if(!confirm('Force logout this user?')) return;
+  const active = jsonGet('activeUsers', []);
+  active.splice(index,1);
+  jsonSet('activeUsers', active);
+  renderLoggedUsers();
+}
+
+/* Messages list (admin sees all user messages; admin cannot choose templates) */
+const messagesContainer = document.getElementById('messagesContainer');
+
+function renderMessages(){
+  const inbox = jsonGet('inbox', []);
+  messagesContainer.innerHTML = '';
+  if(inbox.length === 0){
+    messagesContainer.innerHTML = '<p>No messages.</p>';
+    return;
+  }
+
+  inbox.forEach((m, idx) => {
+    const card = document.createElement('div');
+    card.className = 'admin-card';
+
+    const statusClass = m.replyText || m.adminVoice ? 'replied' : 'pending';
+    const statusLabel = m.replyText || m.adminVoice ? 'Replied' : 'Pending';
+
+    // user voice small
+    const userVoiceHtml = m.userVoice ? `<div><strong>User Voice</strong><br><audio class="small-audio" controls src="${m.userVoice}"></audio>
+          <button class="delete-btn" onclick="deleteUserVoice(${idx})">Delete user VC</button></div>` : '';
+
+    const adminVoiceHtml = m.adminVoice ? `<div><strong>Admin Voice</strong><br><audio class="small-audio" controls src="${m.adminVoice}"></audio>
+          <button class="delete-btn" onclick="deleteAdminVoice(${idx})">Delete admin VC</button></div>` : '';
+
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <h3 style="margin:0">${m.userName} <span style="color:#bfc7d1">(${m.userEmail})</span></h3>
+          <div class="meta">Templates: ${m.templates.join(' | ')} • ${new Date(m.sentAt).toLocaleString()}</div>
+        </div>
+        <div>
+          <span class="status-pill ${statusClass}">${statusLabel}</span>
+          <button class="delete-btn" onclick="deleteMessage(${idx})">Delete message</button>
+        </div>
+      </div>
+
+      <div class="message-body"><strong>User message:</strong><br>${m.message || '<em>(no text)</em>'}</div>
+
+      ${userVoiceHtml}
+      ${adminVoiceHtml}
+
+      <div style="margin-top:10px" class="reply-area">
+        <textarea id="replyText-${idx}" class="reply-text" placeholder="Write reply...">${m.replyText || ''}</textarea>
+
+        <div class="voice-controls">
+          <button id="record-${idx}" class="btn">🎤 Record reply</button>
+          <button id="stop-${idx}" class="btn" disabled>⏹ Stop</button>
+          <small style="color:#bfc7d1">Recorded admin voice will be sent to the user.</small>
+        </div>
+      </div>
+
+      <div style="margin-top:10px; display:flex; gap:8px">
+        <button class="btn" onclick="sendReply(${idx})">Send Reply</button>
+      </div>
+    `;
+
+    messagesContainer.appendChild(card);
+
+    // attach recording handlers
+    setupAdminRecorder(idx);
+  });
+}
+
+/* Recording for admin per message */
+function setupAdminRecorder(index){
+  // set up only after element exists
+  const recBtn = document.getElementById(`record-${index}`);
+  const stopBtn = document.getElementById(`stop-${index}`);
+  // avoid multiple handlers
+  if(!recBtn || !stopBtn) return;
+
+  let recorder = null;
+  let chunks = [];
+
+  // remove previous listeners if any (defensive)
+  const recClone = recBtn.cloneNode(true);
+  recBtn.parentNode.replaceChild(recClone, recBtn);
+
+  recClone.addEventListener('click', async ()=>{
+    if(!navigator.mediaDevices?.getUserMedia){ alert('Recording not supported'); return; }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recorder = new MediaRecorder(stream);
+    chunks = [];
+    recorder.addEventListener('dataavailable', e=>chunks.push(e.data));
+    recorder.addEventListener('stop', ()=>{
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const reader = new FileReader();
+      reader.onloadend = ()=> {
+        const inbox = jsonGet('inbox', []);
+        inbox[index].adminVoice = reader.result; // base64
+        // keep replyRead false so user sees this as new
+        inbox[index].replyRead = false;
+        jsonSet('inbox', inbox);
+        // reflect immediately in UI
+        renderMessages();
+        renderLoggedUsers();
+      };
+      reader.readAsDataURL(blob);
     });
-}
-function deleteUser(index){
-    if(!confirm("Force logout this user?")) return;
-    let sessions = JSON.parse(localStorage.getItem("activeUsers")||"[]");
-    sessions.splice(index,1);
-    localStorage.setItem("activeUsers", JSON.stringify(sessions));
-    showLoggedUsers();
-}
-showLoggedUsers();
+    recorder.start();
+    recClone.disabled = true;
+    stopBtn.disabled = false;
+  });
 
-// --- Admin Inbox ---
-const adminMessagesContainer = document.getElementById("adminMessagesContainer");
-
-function loadUserMessages(){
-    const inbox = JSON.parse(localStorage.getItem("inbox") || "[]");
-    adminMessagesContainer.innerHTML = "";
-    if(inbox.length===0){ adminMessagesContainer.innerHTML="<p>No messages found.</p>"; return; }
-
-    inbox.forEach((msg,index)=>{
-        const div=document.createElement("div");
-        div.classList.add("admin-card");
-
-        const statusText = msg.reply ? "Replied" : "Pending";
-        const userVoiceHTML = msg.voice ? `<div class="voice-play"><strong>User VC:</strong><br>
-            <audio controls src="${msg.voice}"></audio>
-            <button class="delete-btn" onclick="deleteUserVoice(${index})">Delete User VC</button></div>` : "";
-        const adminVoiceHTML = msg.adminVoice ? `<div class="voice-play"><strong>Admin VC:</strong><br>
-            <audio controls src="${msg.adminVoice}"></audio>
-            <button class="delete-btn" onclick="deleteAdminVoice(${index})">Delete Admin VC</button></div>` : "";
-
-        div.innerHTML = `
-            <p class="status">Status: ${statusText}</p>
-            <h3>${msg.user} (${msg.email})</h3>
-            <p><strong>Templates:</strong> ${msg.templates.join(" | ")}</p>
-            <p>${msg.message||""}</p>
-            ${userVoiceHTML}
-            ${adminVoiceHTML}
-            
-            <textarea id="replyText-${index}" placeholder="Write reply...">${msg.reply?msg.reply:""}</textarea>
-            
-            <div class="voice-controls">
-                <button id="recordBtn-${index}">🎤 Record Reply VC</button>
-                <button id="stopBtn-${index}" disabled>⏹ Stop & Save</button>
-                <audio id="voicePreview-${index}" controls style="display:none;margin-top:10px;"></audio>
-            </div>
-            
-            <button class="btn" onclick="sendReply(${index})">Send Reply</button>
-            <button class="delete-btn" onclick="deleteMessage(${index})">Delete Message</button>
-        `;
-        adminMessagesContainer.appendChild(div);
-
-        setupVoiceRecording(index);
-    });
+  // stop button
+  const stopClone = stopBtn.cloneNode(true);
+  stopBtn.parentNode.replaceChild(stopClone, stopBtn);
+  stopClone.addEventListener('click', ()=> {
+    if(recorder) recorder.stop();
+    recClone.disabled = false;
+    stopClone.disabled = true;
+  });
 }
 
-// --- Voice recording ---
-function setupVoiceRecording(index){
-    let mediaRecorder, audioChunks=[];
-    const recordBtn = document.getElementById(`recordBtn-${index}`);
-    const stopBtn = document.getElementById(`stopBtn-${index}`);
-    const voicePreview = document.getElementById(`voicePreview-${index}`);
+/* Send reply (text + adminVoice if present) */
+window.sendReply = function(index){
+  const inbox = jsonGet('inbox', []);
+  if(!inbox[index]) return alert('Message not found');
+  const text = document.getElementById(`replyText-${index}`).value.trim();
+  if(!text && !inbox[index].adminVoice) return alert('Please add reply text or record a voice note');
 
-    recordBtn.addEventListener("click", async ()=>{
-        if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ alert("Browser does not support audio recording."); return; }
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks=[];
-        mediaRecorder.addEventListener("dataavailable", e=>audioChunks.push(e.data));
-        mediaRecorder.addEventListener("stop", ()=>{
-            const blob = new Blob(audioChunks, { type: 'audio/webm' });
-            const url = URL.createObjectURL(blob);
-            voicePreview.src=url; voicePreview.style.display="block";
-            const reader = new FileReader();
-            reader.onloadend=()=>{ 
-                let inbox = JSON.parse(localStorage.getItem("inbox")||"[]");
-                inbox[index].adminVoice = reader.result;
-                localStorage.setItem("inbox", JSON.stringify(inbox));
-            };
-            reader.readAsDataURL(blob);
-        });
-        mediaRecorder.start();
-        recordBtn.disabled=true; stopBtn.disabled=false;
-    });
+  inbox[index].replyText = text || null;
+  inbox[index].repliedAt = new Date().toISOString();
+  inbox[index].replyRead = false; // mark as unread for user
+  jsonSet('inbox', inbox);
 
-    stopBtn.addEventListener("click", ()=>{
-        mediaRecorder.stop();
-        recordBtn.disabled=false; stopBtn.disabled=true;
-    });
+  alert('Reply saved — user will see it in their inbox.');
+  renderMessages();
+  renderLoggedUsers();
 }
 
-// --- Send reply ---
-function sendReply(index){
-    const replyText = document.getElementById(`replyText-${index}`).value.trim();
-    let inbox = JSON.parse(localStorage.getItem("inbox") || "[]");
-    if(!replyText && !inbox[index].adminVoice){ alert("Add text or voice reply."); return; }
-    inbox[index].reply = replyText;
-    inbox[index].repliedAt = new Date().toISOString();
-    localStorage.setItem("inbox", JSON.stringify(inbox));
-    alert("Reply sent to user!");
-    loadUserMessages();
-    showLoggedUsers();
+/* Delete helpers */
+window.deleteUserVoice = function(index){
+  if(!confirm('Delete user voice?')) return;
+  const inbox = jsonGet('inbox', []);
+  if(inbox[index]) { inbox[index].userVoice = null; jsonSet('inbox', inbox); renderMessages(); }
+}
+window.deleteAdminVoice = function(index){
+  if(!confirm('Delete admin voice?')) return;
+  const inbox = jsonGet('inbox', []);
+  if(inbox[index]) { inbox[index].adminVoice = null; jsonSet('inbox', inbox); renderMessages(); }
+}
+window.deleteMessage = function(index){
+  if(!confirm('Delete this message?')) return;
+  const inbox = jsonGet('inbox', []);
+  inbox.splice(index,1);
+  jsonSet('inbox', inbox);
+  renderMessages();
+  renderLoggedUsers();
 }
 
-// --- Delete notes / messages ---
-function deleteUserVoice(index){
-    if(!confirm("Delete this user's VC?")) return;
-    let inbox = JSON.parse(localStorage.getItem("inbox")||"[]");
-    inbox[index].voice=null;
-    localStorage.setItem("inbox", JSON.stringify(inbox));
-    loadUserMessages();
-}
-function deleteAdminVoice(index){
-    if(!confirm("Delete this admin VC?")) return;
-    let inbox = JSON.parse(localStorage.getItem("inbox")||"[]");
-    inbox[index].adminVoice=null;
-    localStorage.setItem("inbox", JSON.stringify(inbox));
-    loadUserMessages();
-}
-function deleteMessage(index){
-    if(!confirm("Delete this message permanently?")) return;
-    let inbox = JSON.parse(localStorage.getItem("inbox")||"[]");
-    inbox.splice(index,1);
-    localStorage.setItem("inbox", JSON.stringify(inbox));
-    loadUserMessages();
-}
+/* Clear all messages */
+document.getElementById('clearAllBtn').addEventListener('click', ()=>{
+  if(!confirm('Clear all messages?')) return;
+  jsonSet('inbox', []);
+  renderMessages();
+  renderLoggedUsers();
+});
 
-loadUserMessages();
+/* Refresh and logout */
+document.getElementById('refreshBtn').addEventListener('click', ()=>{ renderMessages(); renderLoggedUsers(); });
+document.getElementById('logoutAdmin').addEventListener('click', ()=>{ sessionStorage.removeItem('admin'); alert('Admin signed out'); window.location.href = 'login.html'; });
+
+/* initial render */
+renderLoggedUsers();
+renderMessages();
 </script>
 </body>
 </html>
