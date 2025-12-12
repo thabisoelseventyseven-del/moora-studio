@@ -1,234 +1,326 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Dashboard - Moora Studio</title>
 <link rel="stylesheet" href="style.css">
 <style>
-/* Dashboard Styles */
-.dashboard-container { max-width:1100px; margin:2em auto; padding:0 20px; }
-.dashboard-section { margin-bottom:2em; }
-.dashboard-cards { display:flex; flex-wrap:wrap; gap:16px; margin-top:1em; }
-.dashboard-card { background: #1c1c27; border-radius:12px; padding:1em; flex:1 1 200px; cursor:pointer; color:#fff; text-align:center; }
+/* Minimal necessary styles (keeps your look) */
+body { font-family: Arial, sans-serif; background:#0f0f15; color:#eee; margin:0; }
+.top-left-nav { display:flex; gap:12px; padding:12px 20px; align-items:center; }
+.btn { background:linear-gradient(135deg,#50e3c2,#ff6ec7); color:#fff; padding:8px 12px; border-radius:8px; text-decoration:none; border:none; cursor:pointer; }
+.small-btn { padding:6px 10px; font-size:0.9rem; }
+.header { text-align:center; padding:18px 10px; }
+.dashboard-container { max-width:1100px; margin:16px auto; padding:0 20px 60px; }
+.dashboard-section { margin-bottom:22px; }
+.dashboard-cards { display:flex; flex-wrap:wrap; gap:14px; margin-top:12px; }
+.dashboard-card { background:#1c1c27; border-radius:12px; padding:14px; flex:1 1 220px; cursor:pointer; color:#fff; text-align:center; }
 .dashboard-card.selected-template { border:2px solid #ff6ec7; background:#29293f; }
-.template-price { margin-top:6px; font-size:0.95rem; color:#ffd6f0; }
+.template-price { margin-top:8px; font-size:0.95rem; color:#ffd6f0; }
 
-/* Message Box */
-#messageBox { width:100%; min-height:100px; padding:10px; border-radius:10px; border:1px solid #333; background:#0f0f15; color:#eee; resize:vertical; font-size:1rem; }
-#guidanceMsg { margin:0.5em 0 1em 0; font-size:1rem; color:#ff6ec7; }
+/* Message area */
+.message-card { background:#1a1a28; padding:16px; border-radius:12px; }
+#messageBox { width:100%; min-height:100px; padding:12px; border-radius:8px; background:#0f0f15; border:1px solid #333; color:#eee; resize:vertical; }
+.voice-controls { display:flex; gap:8px; align-items:center; margin-top:10px; }
+.voice-controls button { padding:8px 10px; border-radius:8px; border:none; cursor:pointer; }
+audio { width:100%; margin-top:8px; }
 
-/* Voice controls */
-.voice-container { margin-top:0.5em; display:flex; align-items:center; gap:10px; }
-.voice-container button { padding:6px 12px; background:#ff4d4d; border:none; color:#fff; border-radius:6px; cursor:pointer; font-size:0.8rem; }
-.voice-container audio { width:100%; margin-top:6px; height:40px; }
+/* Inbox (user sees only admin replies) */
+.inbox-list { margin-top:8px; }
+.inbox-item { background:#29293f; padding:12px; border-radius:10px; margin-bottom:10px; color:#fff; }
+.inbox-item p { margin:6px 0; }
 
-.send-btn { margin-top:8px; padding:8px 16px; background:linear-gradient(135deg,#50e3c2,#ff6ec7); border:none; color:white; border-radius:8px; font-weight:bold; cursor:pointer; }
+/* Badge style (A: next to Inbox link) */
+.badge { background:#ff6ec7; color:#fff; border-radius:999px; padding:2px 8px; font-size:0.85rem; margin-left:6px; display:none; }
 
-#inboxContainer { margin-top:1em; }
-.inbox-card { background:#29293f; padding:10px; border-radius:10px; margin-bottom:10px; }
-.inbox-card textarea { width:100%; min-height:60px; border-radius:6px; padding:6px; margin-top:4px; background:#1c1c27; border:1px solid #333; color:#fff; resize:vertical; }
-.inbox-card button { margin-top:4px; margin-right:4px; padding:4px 8px; border:none; border-radius:6px; cursor:pointer; }
+.footer { padding:22px; text-align:center; color:#ddd; margin-top:30px; }
 
-@media (max-width:720px){ .dashboard-cards { flex-direction:column; } }
+/* Responsive */
+@media (max-width:720px){ .dashboard-cards{ flex-direction:column; } }
 </style>
 </head>
 <body>
 
-<!-- Floating Dots -->
-<div class="floating-dots"><span></span><span></span><span></span><span></span><span></span></div>
-
-<!-- Top Navigation -->
+<!-- Top navigation with Inbox badge (A) -->
 <div class="top-left-nav">
-    <a href="dashboard.html" class="btn small-btn">Dashboard</a>
-    <a href="inbox.html" class="btn small-btn">Inbox</a>
-    <button id="logoutBtn" class="btn small-btn">Logout</button>
-    <button id="theme-toggle" class="btn small-btn">☀️</button>
+  <a class="btn small-btn" href="dashboard.html">Dashboard</a>
+  <a class="btn small-btn" href="inbox.html" id="inboxLink">Inbox <span id="inboxBadge" class="badge">0</span></a>
+  <button id="logoutBtn" class="btn small-btn">Logout</button>
+  <button id="themeToggle" class="btn small-btn">☀️</button>
 </div>
 
 <header class="header">
-    <h1>Welcome, <span id="userName"></span></h1>
-    <p class="tagline">Select templates and send messages</p>
+  <h1>Welcome, <span id="userName">User</span></h1>
+  <p class="tagline">Select templates and send a message to admin (text or voice)</p>
 </header>
 
-<section class="dashboard-container">
+<main class="dashboard-container">
 
-    <!-- Templates Section -->
-    <div class="dashboard-section">
-        <h2>What We Offer</h2>
-        <p>Select any template(s) (multiple allowed, no duplicates):</p>
-        <div class="dashboard-cards" id="templatesContainer"></div>
+  <!-- Templates (user selects templates) -->
+  <section class="dashboard-section">
+    <h2>Choose Templates</h2>
+    <div id="templatesContainer" class="dashboard-cards"></div>
+  </section>
+
+  <!-- Message box: user writes or records and sends -->
+  <section class="dashboard-section">
+    <h2>Your Message</h2>
+    <div class="message-card">
+      <div id="selectedTemplates" style="margin-bottom:8px;color:#ffd6f0;font-weight:600">Selected: <span id="currentTemplates">None</span></div>
+      <textarea id="messageBox" placeholder="Write your message here (optional if you record)"></textarea>
+
+      <div class="voice-controls">
+        <button id="recordBtn" class="btn">🎤 Record</button>
+        <button id="stopBtn" class="btn" disabled>⏹ Stop</button>
+        <button id="deleteVoiceBtn" class="btn" style="background:#ff4d4d">Delete Voice</button>
+      </div>
+      <audio id="userVoicePreview" controls style="display:none"></audio>
+
+      <div style="margin-top:12px">
+        <button id="sendBtn" class="btn">Send to Admin</button>
+      </div>
+
+      <div id="statusNote" style="margin-top:10px;color:#50e3c2;font-weight:700;display:none"></div>
     </div>
+  </section>
 
-    <!-- Message / Voice Section -->
-    <div class="dashboard-section">
-        <h2>Your Message</h2>
-        <p id="guidanceMsg">Write your message below. You can also record a voice note.</p>
-        <div class="dashboard-card">
-            <h3 id="currentTemplate">No template selected</h3>
-            <textarea id="messageBox" placeholder="Write your message here..."></textarea>
-            <div class="voice-container">
-                <button id="recordBtn">Record</button>
-                <button id="stopBtn" disabled>Stop</button>
-                <button id="deleteVoiceBtn">Delete Voice Note</button>
-                <audio id="audioPreview" controls style="display:none;"></audio>
-            </div>
-            <button class="send-btn" id="sendMessageBtn">Send Message</button>
-        </div>
+  <!-- Inbox: IMPORTANT — user inbox shows ONLY admin replies -->
+  <section class="dashboard-section">
+    <h2>Your Inbox (admin replies)</h2>
+    <div id="inboxList" class="inbox-list">
+      <!-- populated by JS: only messages that have admin reply -->
     </div>
+  </section>
 
-    <!-- Inbox Section -->
-    <div class="dashboard-section">
-        <h2>Your Inbox</h2>
-        <div id="inboxContainer"></div>
-    </div>
-
-</section>
+</main>
 
 <footer class="footer">
-    <p><strong>Contact Us</strong></p>
-    <p>📛 Name: Thabiso Mosesi</p>
-    <p>📞 Phone: 072 176 9099</p>
-    <p>✉️ Email: thabisoelseventyseven@gmail.com</p>
-    <div class="social-icons">
-        <a href="#">📘</a>
-        <a href="#">🐦</a>
-        <a href="#">📸</a>
-        <a href="#">💬</a>
-    </div>
-    <p class="copyright">© 2025 Moora Studio</p>
+  © 2025 Moora Studio — contact: thabisoelseventyseven@gmail.com
 </footer>
 
 <script>
-// --- Theme ---
-const themeToggle = document.getElementById("theme-toggle");
-if(localStorage.getItem("theme")==="light"){ document.body.classList.add("light-theme"); themeToggle.textContent="🌙"; } 
-else { themeToggle.textContent="☀️"; }
-themeToggle.addEventListener("click", ()=>{
-    document.body.classList.toggle("light-theme");
-    if(document.body.classList.contains("light-theme")){ themeToggle.textContent="🌙"; localStorage.setItem("theme","light"); }
-    else { themeToggle.textContent="☀️"; localStorage.setItem("theme","dark"); }
-});
+/* -------------------------
+  Simple client-only messaging system
+  - user sends message -> stored in localStorage as inboxEntry
+  - admin sees messages in admin.html and replies
+  - user inbox shows only admin replies (reply text and/or adminVoice)
+  - badge shows unread replies count (A-style next to Inbox)
+--------------------------*/
 
-// --- Logout ---
-document.getElementById("logoutBtn").addEventListener("click",()=>{
-    sessionStorage.clear(); window.location.href="login.html";
-});
+/* Helper: safe JSON get */
+function jsonGet(key, defaultVal){ try { return JSON.parse(localStorage.getItem(key)||'null') || defaultVal; } catch(e){ return defaultVal; } }
+function jsonSet(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
 
-// --- User ---
-const user = JSON.parse(sessionStorage.getItem("user"));
-if(!user) window.location.href="login.html";
-else document.getElementById("userName").textContent=user.name||"User";
+/* Identity: store a 'user' object in sessionStorage on login flow; fallback to demo user if missing */
+let user = null;
+try {
+  user = JSON.parse(sessionStorage.getItem('user'));
+} catch(e){}
+if(!user){
+  // Demo fallback (if you have an actual login page, set sessionStorage user there)
+  user = { name: "Demo User", email: "demo@example.com" };
+  sessionStorage.setItem('user', JSON.stringify(user));
+}
+document.getElementById('userName').textContent = user.name;
 
-// --- Templates ---
-let templates = [
-    {name:"Business Templates", icon:"💼"},
-    {name:"Portfolio Templates", icon:"🎨"},
-    {name:"Landing Pages", icon:"🌐"},
-    {name:"Marketing Materials", icon:"📣"},
-    {name:"CV Creation", icon:"📝"},
-    {name:"University Application", icon:"🎓"},
-    {name:"Report Templates", icon:"📊"},
-    {name:"Web Templates", icon:"💻"}
+/* Templates data (kept minimal) */
+const templates = [
+  { name: "Business Templates", price: "R250", icon: "💼" },
+  { name: "Portfolio Templates", price: "R200", icon: "🎨" },
+  { name: "Landing Pages", price: "R300", icon: "🌐" },
+  { name: "Marketing Materials", price: "R180", icon: "📣" },
+  { name: "CV Creation", price: "R100", icon: "📝" },
+  { name: "University Application", price: "R150", icon: "🎓" },
+  { name: "Report Templates", price: "R120", icon: "📊" },
+  { name: "Web Templates", price: "R350", icon: "💻" }
 ];
-let selectedTemplates=[];
-const templatesContainer=document.getElementById("templatesContainer");
-const currentTemplate=document.getElementById("currentTemplate");
+
+/* Render templates and selection */
+const templatesContainer = document.getElementById('templatesContainer');
+const currentTemplatesEl = document.getElementById('currentTemplates');
+let selectedTemplates = [];
 
 function renderTemplates(){
-    templatesContainer.innerHTML="";
-    templates.forEach((tpl)=>{
-        const div=document.createElement("div");
-        div.className="dashboard-card";
-        div.innerHTML=`<h3 style="font-size:2rem">${tpl.icon} ${tpl.name}</h3>`;
-        div.addEventListener("click",()=>{
-            if(selectedTemplates.includes(tpl.name)){ alert("Already selected."); return; }
-            selectedTemplates.push(tpl.name);
-            div.classList.add("selected-template");
-            currentTemplate.textContent=selectedTemplates.join(" | ");
-        });
-        templatesContainer.appendChild(div);
+  templatesContainer.innerHTML = '';
+  templates.forEach(t=>{
+    const el = document.createElement('div');
+    el.className = 'dashboard-card';
+    el.innerHTML = `<div style="font-size:28px">${t.icon}</div><div style="font-weight:700">${t.name}</div><div class="template-price">${t.price}</div>`;
+    el.addEventListener('click', ()=>{
+      if(selectedTemplates.includes(t.name)) return;
+      selectedTemplates.push(t.name);
+      el.classList.add('selected-template');
+      currentTemplatesEl.textContent = selectedTemplates.join(' | ');
     });
+    templatesContainer.appendChild(el);
+  });
 }
 renderTemplates();
 
-// --- Voice Recorder ---
-let mediaRecorder, audioChunks=[], audioURL;
-const recordBtn=document.getElementById("recordBtn");
-const stopBtn=document.getElementById("stopBtn");
-const deleteVoiceBtn=document.getElementById("deleteVoiceBtn");
-const audioPreview=document.getElementById("audioPreview");
+/* Voice recording for user */
+let mediaRecorder = null;
+let audioChunks = [];
+let userVoiceDataUrl = null;
+const recordBtn = document.getElementById('recordBtn');
+const stopBtn = document.getElementById('stopBtn');
+const deleteVoiceBtn = document.getElementById('deleteVoiceBtn');
+const userVoicePreview = document.getElementById('userVoicePreview');
 
-recordBtn.addEventListener("click", async ()=>{
-    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-    mediaRecorder=new MediaRecorder(stream);
-    mediaRecorder.start();
-    recordBtn.disabled=true; stopBtn.disabled=false;
-    audioChunks=[];
-    mediaRecorder.addEventListener("dataavailable", e=>audioChunks.push(e.data));
-    mediaRecorder.addEventListener("stop", ()=>{
-        const blob=new Blob(audioChunks,{type:'audio/webm'});
-        audioURL=URL.createObjectURL(blob);
-        audioPreview.src=audioURL;
-        audioPreview.style.display='block';
+recordBtn.addEventListener('click', async ()=>{
+  if(!navigator.mediaDevices?.getUserMedia){ alert('Recording not supported in this browser'); return; }
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  mediaRecorder = new MediaRecorder(stream);
+  audioChunks = [];
+  mediaRecorder.addEventListener('dataavailable', e => audioChunks.push(e.data));
+  mediaRecorder.addEventListener('stop', ()=>{
+    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+    const reader = new FileReader();
+    reader.onloadend = ()=> {
+      userVoiceDataUrl = reader.result;            // base64 data url
+      userVoicePreview.src = userVoiceDataUrl;
+      userVoicePreview.style.display = 'block';
+    };
+    reader.readAsDataURL(blob);
+  });
+  mediaRecorder.start();
+  recordBtn.disabled = true;
+  stopBtn.disabled = false;
+});
+
+stopBtn.addEventListener('click', ()=>{
+  if(mediaRecorder) mediaRecorder.stop();
+  recordBtn.disabled = false;
+  stopBtn.disabled = true;
+});
+
+deleteVoiceBtn.addEventListener('click', ()=>{
+  userVoiceDataUrl = null;
+  userVoicePreview.src = '';
+  userVoicePreview.style.display = 'none';
+});
+
+/* Send message to admin (message DOES NOT appear in user inbox) */
+const sendBtn = document.getElementById('sendBtn');
+const messageBox = document.getElementById('messageBox');
+const statusNote = document.getElementById('statusNote');
+
+sendBtn.addEventListener('click', ()=>{
+  const text = messageBox.value.trim();
+
+  if(selectedTemplates.length === 0){
+    alert('Please select at least one template.');
+    return;
+  }
+  if(!text && !userVoiceDataUrl){
+    alert('Please add a message text or record a voice note.');
+    return;
+  }
+
+  // inbox array is used for all messages (serverless simulation)
+  const inbox = jsonGet('inbox', []);
+  // push message object (note: "reply" is admin's reply; user inbox should show only replies)
+  inbox.push({
+    id: 'm_'+Date.now(),
+    userName: user.name,
+    userEmail: user.email,
+    templates: selectedTemplates.slice(),
+    message: text || null,
+    userVoice: userVoiceDataUrl || null,
+    replyText: null,
+    adminVoice: null,
+    repliedAt: null,
+    replyRead: false,     // unread by user when admin replies
+    sentAt: new Date().toISOString()
+  });
+  jsonSet('inbox', inbox);
+
+  // clear UI message box and selections
+  messageBox.value = '';
+  userVoiceDataUrl = null;
+  userVoicePreview.src = '';
+  userVoicePreview.style.display = 'none';
+  selectedTemplates = [];
+  currentTemplatesEl.textContent = 'None';
+  // remove selected styles from template tiles
+  document.querySelectorAll('.dashboard-card.selected-template').forEach(el=>el.classList.remove('selected-template'));
+
+  // notify
+  statusNote.style.display = 'block';
+  statusNote.textContent = 'Message sent to admin.';
+  setTimeout(()=> statusNote.style.display = 'none', 2500);
+
+  // admin may have a separate UI; just update badge (no replies yet)
+  updateBadge(); // not strictly necessary (no replies), but keeps state consistent
+});
+
+/* ---------------------------
+  User Inbox (shows only admin replies)
+   - show entries where replyText or adminVoice is present
+   - mark replyRead true when displayed (so badge clears)
+----------------------------*/
+
+const inboxList = document.getElementById('inboxList');
+const inboxBadge = document.getElementById('inboxBadge');
+
+function renderUserInbox(){
+  const inbox = jsonGet('inbox', []);
+  // only entries for this user that have an admin reply (text or voice)
+  const replies = inbox.filter(it => it.userEmail === user.email && (it.replyText || it.adminVoice));
+  inboxList.innerHTML = '';
+  if(replies.length === 0){
+    inboxList.innerHTML = '<p>No replies from admin yet.</p>';
+  } else {
+    replies.forEach((it, idx) => {
+      const item = document.createElement('div');
+      item.className = 'inbox-item';
+      const repliedAt = it.repliedAt ? new Date(it.repliedAt).toLocaleString() : '';
+      item.innerHTML = `
+        <p><strong>From:</strong> Admin ${repliedAt ? ' • ' + repliedAt : ''}</p>
+        ${it.replyText ? `<p>${it.replyText}</p>` : ''}
+        ${it.adminVoice ? `<div><strong>Voice reply</strong><br><audio controls src="${it.adminVoice}"></audio></div>` : ''}
+        <div style="margin-top:8px;color:#aaa;font-size:0.9rem">Templates: ${it.templates.join(' | ')}</div>
+      `;
+      inboxList.appendChild(item);
+      // mark reply as read (so badge decreases)
+      if(it.replyText || it.adminVoice){
+        if(!it.replyRead){
+          it.replyRead = true;
+        }
+      }
     });
-});
-
-stopBtn.addEventListener("click", ()=>{
-    mediaRecorder.stop();
-    recordBtn.disabled=false; stopBtn.disabled=true;
-});
-
-deleteVoiceBtn.addEventListener("click", ()=>{
-    audioURL=null; audioPreview.src=""; audioPreview.style.display="none";
-});
-
-// --- Inbox / Send Message ---
-const messageBox=document.getElementById("messageBox");
-const sendMessageBtn=document.getElementById("sendMessageBtn");
-const inboxContainer=document.getElementById("inboxContainer");
-
-function renderInbox(){
-    const inbox=JSON.parse(localStorage.getItem("inbox")||'[]').filter(m=>m.email===user.email);
-    inboxContainer.innerHTML="";
-    if(inbox.length===0){ inboxContainer.innerHTML="<p>No messages yet.</p>"; return; }
-    inbox.forEach((m,i)=>{
-        const div=document.createElement("div");
-        div.className="inbox-card";
-        div.innerHTML=`
-            <p><strong>Status:</strong> ${m.reply?'Replied':'Pending'}</p>
-            <p><strong>Templates:</strong> ${m.templates.join(" | ")}</p>
-            ${m.message? `<p>${m.message}</p>`:``}
-            ${m.voice? `<audio controls src="${m.voice}"></audio>`:``}
-        `;
-        inboxContainer.appendChild(div);
-    });
+    // save updated read flags
+    jsonSet('inbox', inbox);
+  }
+  updateBadge();
 }
 
-sendMessageBtn.addEventListener('click', ()=>{
-    const text=messageBox.value.trim();
-    if(selectedTemplates.length===0){ alert("Select at least one template."); return; }
-    if(!text && !audioURL){ alert("Message or voice required."); return; }
+/* badge: count admin replies for this user that are unread */
+function updateBadge(){
+  const inbox = jsonGet('inbox', []);
+  const unread = inbox.filter(it => it.userEmail === user.email && (it.replyText || it.adminVoice) && !it.replyRead).length;
+  if(unread > 0){
+    inboxBadge.style.display = 'inline-block';
+    inboxBadge.textContent = String(unread);
+  } else {
+    inboxBadge.style.display = 'none';
+  }
+}
 
-    const inbox=JSON.parse(localStorage.getItem("inbox")||'[]');
-    inbox.push({
-        user:user.name,
-        email:user.email,
-        templates:[...selectedTemplates],
-        message:text||null,
-        voice:audioURL||null,
-        reply:null,
-        adminVoice:null,
-        sentAt:new Date().toISOString()
-    });
-    localStorage.setItem('inbox',JSON.stringify(inbox));
-    alert("Message sent to admin!");
-    messageBox.value=""; audioURL=null; audioPreview.src=""; audioPreview.style.display="none";
-    selectedTemplates=[]; currentTemplate.textContent="No template selected";
-    renderTemplates(); renderInbox();
+/* When user opens dashboard page we render inbox (user only sees admin replies) */
+renderUserInbox();
+updateBadge();
+
+/* small extras: theme toggle and logout behavior */
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  document.body.classList.toggle('light-theme');
 });
-
-renderInbox();
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  sessionStorage.removeItem('user');
+  // keep localStorage data; redirect to login (if exists)
+  alert('Logged out (session cleared).');
+  window.location.href = 'login.html';
+});
 </script>
 </body>
 </html>
