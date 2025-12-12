@@ -5,20 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Panel - Moora Studio</title>
 <link rel="stylesheet" href="style.css">
-
 <style>
-.admin-card {
-    background: #1c1c27;
-    padding: 1.2em;
-    margin: 1em 0;
-    border-radius: 12px;
-    color: #fff;
-    border: 1px solid #333;
-}
-.admin-card h3 { color: #ff6ec7; }
-textarea { width: 100%; height: 100px; margin-top: 0.7em; }
+.admin-card { background:#1c1c27; padding:1.2em; margin:1em 0; border-radius:12px; color:#fff; border:1px solid #333; }
+.admin-card h3 { color:#ff6ec7; }
+textarea { width:100%; height:100px; margin-top:0.7em; }
+.voice-play { margin-top:8px; }
 </style>
-
 </head>
 <body>
 
@@ -34,51 +26,44 @@ textarea { width: 100%; height: 100px; margin-top: 0.7em; }
 
 <script>
 function loadUserMessages(){
-    const msgs = JSON.parse(localStorage.getItem("messages") || "[]");
+    const msgs = JSON.parse(localStorage.getItem("inbox") || "[]");
     const container = document.getElementById("adminMessagesContainer");
     container.innerHTML = "";
 
-    msgs.forEach((msg, index) => {
-        const div = document.createElement("div");
+    if(msgs.length===0){ container.innerHTML="<p>No messages found.</p>"; return; }
+
+    msgs.forEach((msg,index)=>{
+        const div=document.createElement("div");
         div.classList.add("admin-card");
-        div.innerHTML = `
+
+        const voiceHTML = msg.voice ? `<div class="voice-play"><strong>Voice Note:</strong><br><audio controls src="${msg.voice}"></audio></div>` : "";
+
+        div.innerHTML=`
             <h3>${msg.user} (${msg.email})</h3>
             <p><strong>Templates:</strong> ${msg.templates.join(" | ")}</p>
             <p>${msg.message}</p>
-
-            <textarea id="reply-${index}" placeholder="Write reply..."></textarea>
-            <button class="btn" onclick="sendReply('${msg.email}', ${index})">Send Reply</button>
+            ${voiceHTML}
+            <textarea id="reply-${index}" placeholder="Write reply...">${msg.reply?msg.reply:""}</textarea>
+            <button class="btn" onclick="sendReply(${index})">Send Reply</button>
         `;
-
         container.appendChild(div);
     });
 }
 
-function sendReply(email, index){
-    const textarea = document.getElementById(`reply-${index}`);
-    const replyText = textarea.value.trim();
+function sendReply(index){
+    const textarea=document.getElementById(`reply-${index}`);
+    const replyText=textarea.value.trim();
+    if(!replyText){ alert("Reply cannot be empty."); return; }
 
-    if(!replyText){
-        alert("Reply cannot be empty.");
-        return;
-    }
-
-    const replies = JSON.parse(localStorage.getItem("adminReplies") || "[]");
-
-    replies.push({
-        email: email,
-        title: "Admin Response",
-        message: replyText
-    });
-
-    localStorage.setItem("adminReplies", JSON.stringify(replies));
-    alert("Reply sent!");
-
-    textarea.value = "";
+    let inbox = JSON.parse(localStorage.getItem("inbox") || "[]");
+    inbox[index].reply = replyText;
+    inbox[index].repliedAt = new Date().toISOString();
+    localStorage.setItem("inbox", JSON.stringify(inbox));
+    alert("Reply saved. User can see it in their inbox.");
+    loadUserMessages();
 }
 
 loadUserMessages();
 </script>
-
 </body>
 </html>
