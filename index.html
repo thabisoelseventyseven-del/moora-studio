@@ -5,49 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Moora Studio - Template Marketplace</title>
 <link rel="stylesheet" href="style.css">
-
-<style>
-/* Footer Inline Styling */
-.footer {
-    background: #d3d3d3;
-    padding: 2em 1em;
-    text-align: center;
-    font-family: Arial, sans-serif;
-    color: #000;
-}
-
-.footer p {
-    margin: 0.5em 0;
-    font-size: 1rem;
-}
-
-.footer strong {
-    display: block;
-    margin-bottom: 0.8em;
-    font-size: 1.1rem;
-}
-
-.footer .social-icons {
-    margin: 0.8em 0;
-}
-
-.footer .social-icons a {
-    text-decoration: none;
-    font-size: 1.6rem;
-    margin: 0 12px;
-    display: inline-block;
-    transition: transform 0.2s;
-}
-
-.footer .social-icons a:hover {
-    transform: translateY(-4px);
-}
-
-.footer .brand-highlight {
-    font-weight: bold;
-    color: #000;
-}
-</style>
 </head>
 <body>
 
@@ -91,7 +48,7 @@
     </div>
 </section>
 
-<!-- What We Offer -->
+<!-- What We Offer Section -->
 <section class="what-we-offer">
     <h2>What We Offer</h2>
     <div class="offer-cards">
@@ -100,7 +57,7 @@
         <div class="offer-card"><div class="offer-icon large-icon">🌐</div><h3>Landing Pages</h3><p class="template-price">R300</p></div>
         <div class="offer-card"><div class="offer-icon large-icon">📣</div><h3>Marketing Materials</h3><p class="template-price">R180</p></div>
         <div class="offer-card"><div class="offer-icon large-icon">📝</div><h3>CV Creation</h3><p class="template-price">R100</p></div>
-        <div class="offer-card"><div class="offer-icon large-icon">🎓</div><h3>University Application</h3><p class="template-price">R150</p></div>
+        <div class="offer-card"><div class="offer-icon large-icon">🎓</div><h3>University Applications</h3><p class="template-price">R150</p></div>
         <div class="offer-card"><div class="offer-icon large-icon">📊</div><h3>Report Templates</h3><p class="template-price">R120</p></div>
         <div class="offer-card"><div class="offer-icon large-icon">💻</div><h3>Web Templates</h3><p class="template-price">R350</p></div>
     </div>
@@ -112,7 +69,7 @@
     <a href="register.html" class="btn btn-large cta-btn">Register Now</a>
 </section>
 
-<!-- Footer -->
+<!-- Footer Section -->
 <footer class="footer">
     <p><strong>Contact Us</strong></p>
     <p>🌺 Name: Thabiso Mosesi</p>
@@ -130,7 +87,7 @@
 <script>
 const themeToggle = document.getElementById("theme-toggle");
 
-// Default light mode on landing page
+// Load saved theme or default to light
 const savedTheme = localStorage.getItem("theme") || "light";
 if(savedTheme === "light") {
     document.body.classList.add("light-theme");
