@@ -2,77 +2,36 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Inbox - Moora Studio</title>
 <link rel="stylesheet" href="style.css">
 <style>
-body {
-    font-family: Arial;
-    margin:0;
-    background: #f5f5f5; /* Light mode default */
-    color: #222;
-    transition: background 0.3s, color 0.3s;
-}
-body.dark-theme {
-    background: #0f0f15;
-    color: #eee;
-}
-.top-left-nav {
-    display:flex;
-    gap:12px;
-    padding:12px 20px;
-    align-items:center;
-    background: inherit;
-}
-.btn {
-    background: linear-gradient(135deg,#50e3c2,#ff6ec7);
-    color: #fff;
-    padding: 10px 16px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    text-decoration: none;
-    font-weight: bold;
-}
-.small-btn { font-size:0.9rem; }
+body { font-family: Arial, sans-serif; background:#f5f5f5; color:#111; margin:0; transition: background 0.3s, color 0.3s; }
+body.dark-theme { background:#0f0f15; color:#eee; }
 
-.header {
-    text-align:center;
-    padding:30px 10px;
-}
-.header h1 { font-size:2.2rem; margin-bottom:6px; }
-.header p { font-size:1rem; color:#888; }
+/* Top Navigation */
+.top-left-nav { display:flex; gap:12px; padding:12px 20px; align-items:center; }
+.btn { background:linear-gradient(135deg,#50e3c2,#ff6ec7); color:#fff; padding:8px 14px; border-radius:8px; border:none; cursor:pointer; }
+.btn.small-btn { font-size:0.9rem; }
+.header { text-align:center; padding:24px 10px; }
+.header h1 { font-size:2rem; margin:0; }
+.header p { font-size:1rem; color:#666; }
 
-.inbox-container {
-    max-width: 900px;
-    margin: 0 auto 60px;
-    padding: 0 20px;
-}
-
-.inbox-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    color: #222;
-}
-body.dark-theme .inbox-card {
-    background: #1c1c27;
-    color: #fff;
-}
-.inbox-card b { font-size:1.1rem; }
+/* Inbox */
+.inbox-container { max-width:900px; margin:30px auto; padding:0 20px; }
+.inbox-card { background:#fff; border-radius:14px; padding:16px; margin-bottom:16px; box-shadow:0 4px 12px rgba(0,0,0,0.15); }
+body.dark-theme .inbox-card { background:#1c1c27; color:#eee; }
+.inbox-card h3 { margin:0 0 8px 0; font-size:1.1rem; }
 .inbox-card p { margin:6px 0; }
-.inbox-card small { color:#888; display:block; margin-top:8px; }
-.inbox-card audio { width:100%; margin-top:10px; }
+.inbox-card audio { width:100%; margin-top:6px; }
+.badge { display:inline-block; background:#ff6ec7; color:#fff; padding:4px 10px; border-radius:999px; font-weight:700; margin-left:6px; }
 
-.empty { text-align:center; color:#c9c9c9; padding:36px; background:#0f1013; border-radius:10px; }
+/* Empty state */
+.empty { text-align:center; color:#888; padding:36px; background:#e0e0e0; border-radius:12px; }
+body.dark-theme .empty { background:#0b0b11; color:#888; }
 
-footer {
-    text-align:center;
-    padding:30px;
-    color:#555;
-}
+/* Footer */
+footer { text-align:center; padding:20px; color:#666; }
 </style>
 </head>
 <body>
@@ -84,86 +43,74 @@ footer {
 
 <header class="header">
   <h1>Inbox</h1>
-  <p>View admin replies to your messages</p>
+  <p>Only admin replies appear here. New replies show notifications.</p>
 </header>
 
-<section class="inbox-container" id="inboxContainer"></section>
+<div class="inbox-container" id="inboxContainer"></div>
 
 <footer>
-    <p>© 2025 Moora Studio — contact: thabisoelseventyseven@gmail.com</p>
+  <p>© 2025 Moora <strong>Studio</strong></p>
 </footer>
 
 <script>
-// ----------------- THEME -----------------
-const themeToggle = document.getElementById("themeToggle");
-const savedTheme = localStorage.getItem("theme") || "light";
-if(savedTheme==="dark"){ document.body.classList.add("dark-theme"); themeToggle.textContent="☀️"; } 
-else themeToggle.textContent="🌙";
+// ---------- Theme ----------
+const themeToggle = document.getElementById('themeToggle');
+if(localStorage.getItem('theme')==='light'){ document.body.classList.remove('dark-theme'); themeToggle.textContent='🌙'; } 
+else { document.body.classList.add('dark-theme'); themeToggle.textContent='☀️'; }
 
-themeToggle.addEventListener("click", ()=>{
-    document.body.classList.toggle("dark-theme");
-    if(document.body.classList.contains("dark-theme")){
-        themeToggle.textContent="☀️";
-        localStorage.setItem("theme","dark");
-    } else {
-        themeToggle.textContent="🌙";
-        localStorage.setItem("theme","light");
-    }
+themeToggle.addEventListener('click', ()=>{
+  document.body.classList.toggle('dark-theme');
+  themeToggle.textContent = document.body.classList.contains('dark-theme') ? '☀️' : '🌙';
+  localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
 });
 
-// ----------------- USER CHECK -----------------
+// ---------- User ----------
 const user = JSON.parse(sessionStorage.getItem("user"));
-if(!user) location.href="login.html";
+if(!user){ alert("Please login"); window.location.href='login.html'; }
 
-// ----------------- INBOX -----------------
-const inboxContainer = document.getElementById("inboxContainer");
+// ---------- Inbox ----------
+const inboxContainer = document.getElementById('inboxContainer');
 
 function renderInbox(){
-    const inbox = JSON.parse(localStorage.getItem("inbox")||"[]");
-    // Only show admin replies
-    const replies = inbox.filter(m=>m.userEmail===user.email && (m.adminReply || m.adminVoice));
-    inboxContainer.innerHTML="";
+    const inbox = JSON.parse(localStorage.getItem('inbox') || "[]");
+    const replies = inbox.filter(m=>m.userEmail===user.email && (m.replyText || m.adminVoice));
+    inboxContainer.innerHTML = '';
 
     if(replies.length===0){
-        inboxContainer.innerHTML="<div class='empty'>No admin replies yet.</div>";
+        inboxContainer.innerHTML="<div class='empty'>No replies yet.</div>";
+        updateBadge(0);
         return;
     }
 
-    replies.forEach((msg)=>{
-        const div = document.createElement("div");
-        div.className="inbox-card";
-
-        const audioHTML = msg.adminVoice ? `<audio controls src="${msg.adminVoice}"></audio>` : "";
-
-        div.innerHTML = `
-            <b>Admin Reply:</b>
-            <p>${msg.adminReply || "(No text reply)"}</p>
-            ${audioHTML}
-            <small>Templates: ${msg.templates ? msg.templates.join(" | ") : "(none)"}</small>
+    replies.forEach((msg,idx)=>{
+        const card = document.createElement('div');
+        card.className='inbox-card';
+        card.innerHTML = `
+            <h3>From Admin <span class="badge">${msg.replyRead===false ? 'NEW' : ''}</span></h3>
+            ${msg.replyText ? `<p>${msg.replyText}</p>` : ''}
+            ${msg.adminVoice ? `<audio controls src="${msg.adminVoice}"></audio>` : ''}
+            <small>Templates: ${msg.templates.join(' | ')}</small>
         `;
-        inboxContainer.appendChild(div);
-
+        inboxContainer.appendChild(card);
         // Mark as read
-        if(!msg.replyRead) msg.replyRead = true;
+        msg.replyRead=true;
     });
 
-    localStorage.setItem("inbox", JSON.stringify(inbox));
-    updateBadge();
+    localStorage.setItem('inbox',JSON.stringify(inbox));
+    updateBadge(replies.filter(r=>r.replyRead===false).length);
 }
 
-// ----------------- BADGE -----------------
-const inboxBadge = document.querySelector("#inboxBadge");
-function updateBadge(){
-    const inbox = JSON.parse(localStorage.getItem("inbox")||"[]");
-    const unread = inbox.filter(m=>m.userEmail===user.email && (m.adminReply || m.adminVoice) && !m.replyRead).length;
-    if(inboxBadge) {
-        inboxBadge.style.display = unread? "inline-block":"none";
-        inboxBadge.textContent = unread;
+function updateBadge(count){
+    // Update dashboard badge if exists
+    const badge = document.getElementById('inboxBadge');
+    if(badge){
+        badge.style.display=count>0?'inline-block':'none';
+        badge.textContent=count;
     }
 }
 
+// ---------- Initial render ----------
 renderInbox();
-updateBadge();
 </script>
 
 </body>
