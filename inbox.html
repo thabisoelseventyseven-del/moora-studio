@@ -2,171 +2,52 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Moora Studio - Inbox</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inbox - Moora Studio</title>
 <link rel="stylesheet" href="style.css">
 <style>
-/* Inbox-specific styling */
-.inbox-container {
-    max-width: 900px;
-    margin: 2em auto;
-    padding: 0 20px;
-}
-
-.inbox-card {
-    background: #1c1c27;
-    border-radius: 12px;
-    padding: 1em;
-    margin-bottom: 1em;
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-}
-
-.inbox-card p { margin: 0.5em 0; }
-.inbox-card .voice-container { display:flex; align-items:center; gap:10px; margin-top:6px; }
-.inbox-card .voice-container audio { height: 40px; }
-.inbox-card .voice-container button { padding:4px 8px; background:#ff4d4d; border:none; color:#fff; border-radius:6px; cursor:pointer; font-size:0.8rem; }
-
-.inbox-card textarea {
-    width: 100%;
-    min-height: 80px;
-    margin-top: 6px;
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid #333;
-    background:#0f0f15;
-    color:#eee;
-    resize:vertical;
-}
-
-.inbox-card button.send-btn {
-    margin-top: 6px;
-    padding: 6px 12px;
-    background:linear-gradient(135deg,#50e3c2,#ff6ec7);
-    border:none;
-    color:white;
-    border-radius:6px;
-    cursor:pointer;
-    font-weight:bold;
-}
-
-.empty { text-align:center; color:#c9c9c9; padding:36px; background:#0f1013; border-radius:10px; }
-
+body{background:#0f0f15;color:#eee;font-family:Arial}
+.inbox-container{max-width:900px;margin:30px auto;padding:20px}
+.card{background:#1c1c27;border-radius:12px;padding:14px;margin-bottom:12px}
+audio{width:100%}
 </style>
 </head>
+
 <body>
 
-<!-- Floating Dots -->
-<div class="floating-dots"><span></span><span></span><span></span><span></span><span></span></div>
-
-<!-- Top Navigation -->
 <div class="top-left-nav">
-    <a href="dashboard.html" class="btn small-btn">Dashboard</a>
-    <button id="theme-toggle" class="btn small-btn">☀️</button>
+  <a href="dashboard.html" class="btn small-btn">Dashboard</a>
 </div>
 
-<header class="header">
-    <h1>Inbox</h1>
-    <p class="tagline">View and manage your messages</p>
-</header>
+<h2 style="text-align:center">Inbox</h2>
 
-<section class="inbox-container" id="inboxContainer"></section>
-
-<footer class="footer">
-    <p><strong>Contact Us</strong></p>
-    <p>🌺 Name: Thabiso Mosesi</p>
-    <p>📞 Phone: 072 176 9099</p>
-    <p>✉️ Email: thabisoelseventyseven@gmail.com</p>
-    <div class="social-icons">
-        <a href="#">📘</a>
-        <a href="#">🐦</a>
-        <a href="#">📸</a>
-        <a href="#">💬</a>
-    </div>
-    <p>© 2025 Moora <span class="brand-highlight">Studio</span></p>
-</footer>
+<div class="inbox-container" id="list"></div>
 
 <script>
-// Theme toggle
-const themeToggle = document.getElementById("theme-toggle");
-const savedTheme = localStorage.getItem("theme") || "dark";
-if(savedTheme==="light"){ document.body.classList.add("light-theme"); themeToggle.textContent="🌙"; } 
-else { themeToggle.textContent="☀️"; }
+const user=JSON.parse(sessionStorage.getItem("user"));
+if(!user) location.href="login.html";
 
-themeToggle.addEventListener("click", ()=>{
-    document.body.classList.toggle("light-theme");
-    if(document.body.classList.contains("light-theme")){ themeToggle.textContent="🌙"; localStorage.setItem("theme","light"); }
-    else { themeToggle.textContent="☀️"; localStorage.setItem("theme","dark"); }
-});
+const inbox=JSON.parse(localStorage.getItem("inbox")||"[]");
+const replies=inbox.filter(m=>m.userEmail===user.email && m.adminReply);
+const list=document.getElementById("list");
 
-// Load user
-const user = JSON.parse(sessionStorage.getItem("user"));
-if(!user) window.location.href = "login.html";
-
-// Load inbox
-const inboxContainer = document.getElementById("inboxContainer");
-function loadInbox(){
-    const inbox = JSON.parse(localStorage.getItem("inbox") || "[]");
-    const myMessages = inbox.filter(m=>m.email===user.email);
-    inboxContainer.innerHTML="";
-    if(myMessages.length===0){ inboxContainer.innerHTML="<div class='empty'>No messages yet.</div>"; return; }
-
-    myMessages.forEach((msg,index)=>{
-        const div = document.createElement("div");
-        div.className="inbox-card";
-
-        // User voice
-        const userVoice = msg.voice ? `<div class="voice-container">
-            <audio controls src="${msg.voice}"></audio>
-            <button onclick="deleteVoice(${index},'voice')">Delete VC</button>
-        </div>` : "";
-
-        // Admin voice
-        const adminVoice = msg.adminVoice ? `<div class="voice-container">
-            <audio controls src="${msg.adminVoice}"></audio>
-            <button onclick="deleteVoice(${index},'adminVoice')">Delete Admin VC</button>
-        </div>` : "";
-
-        // Editable message
-        const messageText = `<textarea id="msg-${index}">${msg.message}</textarea>
-            <button class="send-btn" onclick="saveMessage(${index})">Save Changes</button>`;
-
-        div.innerHTML = `
-            <p><strong>Templates:</strong> ${msg.templates ? msg.templates.join(" | ") : "(none)"}</p>
-            ${messageText}
-            ${userVoice}
-            ${adminVoice}
-            <p><strong>Admin Reply:</strong> ${msg.reply || "No reply yet"}</p>
-        `;
-
-        inboxContainer.appendChild(div);
-    });
+if(!replies.length){
+  list.innerHTML="<p>No admin replies yet.</p>";
+}else{
+  replies.forEach(m=>{
+    const d=document.createElement("div");
+    d.className="card";
+    d.innerHTML=`
+      <b>Admin Reply</b>
+      <p>${m.adminReply}</p>
+      ${m.adminVoice?`<audio controls src="${m.adminVoice}"></audio>`:""}
+      <small>Templates: ${m.templates.join(" | ")}</small>
+    `;
+    list.appendChild(d);
+    m.replyRead=true;
+  });
+  localStorage.setItem("inbox",JSON.stringify(inbox));
 }
-
-function saveMessage(index){
-    const inbox = JSON.parse(localStorage.getItem("inbox")||"[]");
-    const myMessages = inbox.filter(m=>m.email===user.email);
-    const msg = myMessages[index];
-    const realIndex = inbox.findIndex(m=>m.sentAt===msg.sentAt);
-    const textarea = document.getElementById(`msg-${index}`);
-    inbox[realIndex].message = textarea.value.trim();
-    localStorage.setItem("inbox",JSON.stringify(inbox));
-    alert("Message updated!");
-}
-
-function deleteVoice(index,type){
-    if(!confirm("Delete this voice note?")) return;
-    const inbox = JSON.parse(localStorage.getItem("inbox")||"[]");
-    const myMessages = inbox.filter(m=>m.email===user.email);
-    const msg = myMessages[index];
-    const realIndex = inbox.findIndex(m=>m.sentAt===msg.sentAt);
-    inbox[realIndex][type]=null;
-    localStorage.setItem("inbox",JSON.stringify(inbox));
-    loadInbox();
-}
-
-loadInbox();
 </script>
 
 </body>
