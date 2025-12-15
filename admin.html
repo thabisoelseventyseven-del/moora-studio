@@ -1,275 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Admin Panel - Moora Studio</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin Inbox - Moora Studio</title>
 <link rel="stylesheet" href="style.css">
 <style>
-/* Admin panel inline styling */
-body { font-family: Arial, sans-serif; background:#0f0f15; color:#eee; margin:0; }
-.header { text-align:center; padding:18px; }
-.controls { display:flex; gap:12px; padding:12px 20px; align-items:center; justify-content:flex-end; }
-.btn { background:linear-gradient(135deg,#50e3c2,#ff6ec7); color:#fff; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; }
-.admin-container { max-width:1100px; margin:12px auto; padding:0 20px 60px; }
-.admin-card { background:linear-gradient(180deg,#11111a,#0f0f15); border-radius:12px; padding:14px; margin-bottom:12px; border-left:6px solid #ff6ec7; color:#eaeaea; }
-.meta { font-size:0.9rem; color:#bfc7d1; margin-bottom:6px; }
-.message-body { background:#0b0b11; padding:12px; border-radius:8px; color:#ddd; margin-bottom:10px; white-space:pre-wrap; }
-.reply-area { display:flex; gap:12px; margin-top:8px; align-items:flex-start; }
-.reply-text { width:60%; min-height:80px; padding:8px; border-radius:8px; background:#0f0f15; color:#fff; border:1px solid #333; }
-.voice-controls { display:flex; flex-direction:column; gap:8px; }
-.small-audio { width:250px; }
-.delete-btn { background:#ff4d4d; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
-.user-block { display:flex; gap:12px; align-items:center; justify-content:space-between; }
-.logged-list { margin-bottom:14px; }
-.status-pill { display:inline-block; padding:6px 10px; border-radius:999px; font-weight:700; }
-.pending { background:orange; color:black; }
-.replied { background:#66ff99; color:black; }
-.count-badge { background:#ffd6f0; color:#000; padding:4px 8px; border-radius:8px; font-weight:700; margin-left:8px; }
+body { font-family: Arial; margin:0; background:#f5f5f5; color:#111; transition: all 0.3s;}
+body.dark-theme { background:#0f0f15; color:#eee; }
+
+.top-left-nav {
+    display:flex; justify-content:flex-end; gap:12px; padding:16px 20px; background:inherit; position:sticky; top:0; z-index:1000;
+}
+.btn { padding:10px 18px; border:none; border-radius:10px; font-weight:600; cursor:pointer; background: linear-gradient(135deg,#50e3c2,#ff6ec7); color:#fff; }
+.small-btn { font-size:0.9rem; }
+
+.header { text-align:center; padding:40px 20px 20px; }
+.header h1 { font-size:2.4rem; margin-bottom:4px; }
+.header p { font-size:1rem; color:#666; }
+
+.admin-container { max-width:1100px; margin:20px auto 60px; padding:0 20px; }
+
+.admin-card { background:#fff; padding:20px; border-radius:14px; margin-bottom:18px; box-shadow:0 5px 12px rgba(0,0,0,0.15);}
+body.dark-theme .admin-card { background:#1c1c27; color:#eee; }
+
+.admin-card h3 { margin:0 0 8px 0; }
+.admin-card .meta { font-size:0.85rem; color:#888; margin-bottom:10px; }
+.admin-card textarea { width:100%; min-height:80px; padding:8px; border-radius:8px; border:1px solid #ccc; margin-bottom:8px; }
+body.dark-theme textarea { background:#0f0f15; color:#eee; border:1px solid #333; }
+
+.admin-card button { margin-right:6px; margin-top:6px; padding:6px 12px; border:none; border-radius:8px; cursor:pointer; background:linear-gradient(135deg,#50e3c2,#ff6ec7); color:#fff; font-weight:600; }
+.audio-controls { display:flex; flex-wrap:wrap; gap:10px; margin-top:6px; }
+audio { width:100%; max-width:300px; }
 </style>
 </head>
 <body>
 
-<div class="controls">
-  <button id="refreshBtn" class="btn">Refresh</button>
-  <button id="clearAllBtn" class="btn" style="background:#ff6e6e">Clear All Messages</button>
-  <button id="logoutAdmin" class="btn" style="background:#666">Logout Admin</button>
+<div class="top-left-nav">
+  <button id="themeToggle" class="btn small-btn">🌙</button>
+  <button id="logoutBtn" class="btn small-btn">Logout</button>
 </div>
 
 <header class="header">
-  <h1>Admin Panel — Messages</h1>
-  <p style="color:#bfc7d1">Manage user messages; reply by text or voice. Replies go to user's inbox only.</p>
+<h1>Admin Inbox</h1>
+<p>Reply to user messages by text or voice. Replies go directly to user inbox.</p>
 </header>
 
-<main class="admin-container">
-  <section>
-    <h2>Logged-in Users</h2>
-    <div id="loggedUsers" class="logged-list"></div>
-  </section>
-
-  <section>
-    <h2>All User Messages</h2>
-    <div id="messagesContainer"></div>
-  </section>
-</main>
+<main class="admin-container" id="messagesContainer"></main>
 
 <script>
-/* Admin page logic (localStorage-based) */
+/* --- Admin Setup --- */
+let admin = JSON.parse(sessionStorage.getItem('admin'));
+if(!admin){ admin={name:"Admin",email:"admin@moora.local"}; sessionStorage.setItem('admin',JSON.stringify(admin)); }
 
-/* helpers */
-function jsonGet(key, defaultVal){ try { return JSON.parse(localStorage.getItem(key)||'null') || defaultVal; } catch(e){ return defaultVal; } }
-function jsonSet(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+function jsonGet(key,def=[]){ try{return JSON.parse(localStorage.getItem(key)||'null')||def}catch(e){return def} }
+function jsonSet(key,val){ localStorage.setItem(key,JSON.stringify(val)) }
 
-/* Demo admin session setup if needed */
-let admin = null;
-try { admin = JSON.parse(sessionStorage.getItem('admin')); } catch(e){}
-if(!admin){
-  admin = { name: "Admin", email: "admin@moora.local" };
-  sessionStorage.setItem('admin', JSON.stringify(admin));
-}
-
-/* show logged-in users (activeUsers stored in localStorage by login code elsewhere) */
-function renderLoggedUsers(){
-  const active = jsonGet('activeUsers', []);
-  const container = document.getElementById('loggedUsers');
-  container.innerHTML = '';
-  if(active.length === 0){
-    container.innerHTML = '<p>No users logged in.</p>';
-    return;
-  }
-  active.forEach((u, i) => {
-    const inbox = jsonGet('inbox', []).filter(m => m.userEmail === u.email);
-    const div = document.createElement('div');
-    div.className = 'admin-card';
-    div.innerHTML = `<div class="user-block">
-        <div>
-          <strong>${u.name}</strong> <span style="color:#bfc7d1">(${u.email})</span>
-          <span class="count-badge">${inbox.length}</span>
-        </div>
-        <div>
-          <button class="delete-btn" onclick="forceLogout(${i})">Force logout</button>
-        </div>
-    </div>`;
-    container.appendChild(div);
-  });
-}
-
-/* force logout */
-window.forceLogout = function(index){
-  if(!confirm('Force logout this user?')) return;
-  const active = jsonGet('activeUsers', []);
-  active.splice(index,1);
-  jsonSet('activeUsers', active);
-  renderLoggedUsers();
-}
-
-/* Messages list (admin sees all user messages; admin cannot choose templates) */
+/* --- Render Messages --- */
 const messagesContainer = document.getElementById('messagesContainer');
 
 function renderMessages(){
-  const inbox = jsonGet('inbox', []);
-  messagesContainer.innerHTML = '';
-  if(inbox.length === 0){
-    messagesContainer.innerHTML = '<p>No messages.</p>';
-    return;
-  }
+    const inbox = jsonGet('inbox',[]);
+    messagesContainer.innerHTML='';
+    if(inbox.length===0){ messagesContainer.innerHTML='<p>No messages.</p>'; return; }
 
-  inbox.forEach((m, idx) => {
-    const card = document.createElement('div');
-    card.className = 'admin-card';
+    inbox.forEach((msg,index)=>{
+        const card = document.createElement('div');
+        card.className='admin-card';
+        const status = (msg.replyText || msg.adminVoice) ? 'Replied' : 'Pending';
 
-    const statusClass = m.replyText || m.adminVoice ? 'replied' : 'pending';
-    const statusLabel = m.replyText || m.adminVoice ? 'Replied' : 'Pending';
-
-    // user voice small
-    const userVoiceHtml = m.userVoice ? `<div><strong>User Voice</strong><br><audio class="small-audio" controls src="${m.userVoice}"></audio>
-          <button class="delete-btn" onclick="deleteUserVoice(${idx})">Delete user VC</button></div>` : '';
-
-    const adminVoiceHtml = m.adminVoice ? `<div><strong>Admin Voice</strong><br><audio class="small-audio" controls src="${m.adminVoice}"></audio>
-          <button class="delete-btn" onclick="deleteAdminVoice(${idx})">Delete admin VC</button></div>` : '';
-
-    card.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div>
-          <h3 style="margin:0">${m.userName} <span style="color:#bfc7d1">(${m.userEmail})</span></h3>
-          <div class="meta">Templates: ${m.templates.join(' | ')} • ${new Date(m.sentAt).toLocaleString()}</div>
+        card.innerHTML=`
+        <h3>${msg.userName} (${msg.userEmail}) <small>${status}</small></h3>
+        <div class="meta">Templates: ${msg.templates.join(' | ')} • Sent: ${new Date(msg.sentAt).toLocaleString()}</div>
+        <div><strong>User Message:</strong> <p>${msg.message}</p></div>
+        ${msg.userVoice?`<div class="audio-controls"><strong>User Voice:</strong><audio controls src="${msg.userVoice}"></audio></div>`:''}
+        <textarea id="replyText-${index}" placeholder="Write reply...">${msg.replyText||''}</textarea>
+        <div class="audio-controls">
+            <button id="record-${index}">🎤 Record Reply</button>
+            <button id="stop-${index}" disabled>⏹ Stop</button>
+            ${msg.adminVoice?`<audio controls src="${msg.adminVoice}"></audio>`:''}
         </div>
-        <div>
-          <span class="status-pill ${statusClass}">${statusLabel}</span>
-          <button class="delete-btn" onclick="deleteMessage(${idx})">Delete message</button>
-        </div>
-      </div>
+        <button onclick="sendReply(${index})">Send Reply</button>
+        `;
+        messagesContainer.appendChild(card);
 
-      <div class="message-body"><strong>User message:</strong><br>${m.message || '<em>(no text)</em>'}</div>
-
-      ${userVoiceHtml}
-      ${adminVoiceHtml}
-
-      <div style="margin-top:10px" class="reply-area">
-        <textarea id="replyText-${idx}" class="reply-text" placeholder="Write reply...">${m.replyText || ''}</textarea>
-
-        <div class="voice-controls">
-          <button id="record-${idx}" class="btn">🎤 Record reply</button>
-          <button id="stop-${idx}" class="btn" disabled>⏹ Stop</button>
-          <small style="color:#bfc7d1">Recorded admin voice will be sent to the user.</small>
-        </div>
-      </div>
-
-      <div style="margin-top:10px; display:flex; gap:8px">
-        <button class="btn" onclick="sendReply(${idx})">Send Reply</button>
-      </div>
-    `;
-
-    messagesContainer.appendChild(card);
-
-    // attach recording handlers
-    setupAdminRecorder(idx);
-  });
-}
-
-/* Recording for admin per message */
-function setupAdminRecorder(index){
-  // set up only after element exists
-  const recBtn = document.getElementById(`record-${index}`);
-  const stopBtn = document.getElementById(`stop-${index}`);
-  // avoid multiple handlers
-  if(!recBtn || !stopBtn) return;
-
-  let recorder = null;
-  let chunks = [];
-
-  // remove previous listeners if any (defensive)
-  const recClone = recBtn.cloneNode(true);
-  recBtn.parentNode.replaceChild(recClone, recBtn);
-
-  recClone.addEventListener('click', async ()=>{
-    if(!navigator.mediaDevices?.getUserMedia){ alert('Recording not supported'); return; }
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    recorder = new MediaRecorder(stream);
-    chunks = [];
-    recorder.addEventListener('dataavailable', e=>chunks.push(e.data));
-    recorder.addEventListener('stop', ()=>{
-      const blob = new Blob(chunks, { type: 'audio/webm' });
-      const reader = new FileReader();
-      reader.onloadend = ()=> {
-        const inbox = jsonGet('inbox', []);
-        inbox[index].adminVoice = reader.result; // base64
-        // keep replyRead false so user sees this as new
-        inbox[index].replyRead = false;
-        jsonSet('inbox', inbox);
-        // reflect immediately in UI
-        renderMessages();
-        renderLoggedUsers();
-      };
-      reader.readAsDataURL(blob);
+        setupRecorder(index);
     });
-    recorder.start();
-    recClone.disabled = true;
-    stopBtn.disabled = false;
-  });
-
-  // stop button
-  const stopClone = stopBtn.cloneNode(true);
-  stopBtn.parentNode.replaceChild(stopClone, stopBtn);
-  stopClone.addEventListener('click', ()=> {
-    if(recorder) recorder.stop();
-    recClone.disabled = false;
-    stopClone.disabled = true;
-  });
 }
 
-/* Send reply (text + adminVoice if present) */
-window.sendReply = function(index){
-  const inbox = jsonGet('inbox', []);
-  if(!inbox[index]) return alert('Message not found');
-  const text = document.getElementById(`replyText-${index}`).value.trim();
-  if(!text && !inbox[index].adminVoice) return alert('Please add reply text or record a voice note');
+/* --- Admin Voice Recording --- */
+function setupRecorder(index){
+    const recBtn = document.getElementById(`record-${index}`);
+    const stopBtn = document.getElementById(`stop-${index}`);
+    if(!recBtn||!stopBtn) return;
 
-  inbox[index].replyText = text || null;
-  inbox[index].repliedAt = new Date().toISOString();
-  inbox[index].replyRead = false; // mark as unread for user
-  jsonSet('inbox', inbox);
-
-  alert('Reply saved — user will see it in their inbox.');
-  renderMessages();
-  renderLoggedUsers();
+    let recorder=null; let chunks=[];
+    recBtn.onclick = async ()=>{
+        if(!navigator.mediaDevices?.getUserMedia){ alert('Recording not supported'); return; }
+        const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+        recorder = new MediaRecorder(stream);
+        chunks=[];
+        recorder.ondataavailable = e=>chunks.push(e.data);
+        recorder.onstop = ()=>{
+            const blob = new Blob(chunks,{type:'audio/webm'});
+            const reader = new FileReader();
+            reader.onloadend = ()=>{
+                const inbox = jsonGet('inbox',[]);
+                inbox[index].adminVoice = reader.result;
+                inbox[index].replyRead = false;
+                jsonSet('inbox',inbox);
+                renderMessages();
+            };
+            reader.readAsDataURL(blob);
+        };
+        recorder.start();
+        recBtn.disabled=true; stopBtn.disabled=false;
+    };
+    stopBtn.onclick = ()=>{
+        if(recorder) recorder.stop();
+        recBtn.disabled=false; stopBtn.disabled=true;
+    };
 }
 
-/* Delete helpers */
-window.deleteUserVoice = function(index){
-  if(!confirm('Delete user voice?')) return;
-  const inbox = jsonGet('inbox', []);
-  if(inbox[index]) { inbox[index].userVoice = null; jsonSet('inbox', inbox); renderMessages(); }
-}
-window.deleteAdminVoice = function(index){
-  if(!confirm('Delete admin voice?')) return;
-  const inbox = jsonGet('inbox', []);
-  if(inbox[index]) { inbox[index].adminVoice = null; jsonSet('inbox', inbox); renderMessages(); }
-}
-window.deleteMessage = function(index){
-  if(!confirm('Delete this message?')) return;
-  const inbox = jsonGet('inbox', []);
-  inbox.splice(index,1);
-  jsonSet('inbox', inbox);
-  renderMessages();
-  renderLoggedUsers();
+/* --- Send reply --- */
+function sendReply(index){
+    const inbox = jsonGet('inbox',[]);
+    const text = document.getElementById(`replyText-${index}`).value.trim();
+    if(!text && !inbox[index].adminVoice){ alert('Add reply text or voice'); return; }
+    inbox[index].replyText = text||null;
+    inbox[index].repliedAt = new Date().toISOString();
+    inbox[index].replyRead = false;
+    jsonSet('inbox',inbox);
+    alert('Reply sent to user!');
+    renderMessages();
 }
 
-/* Clear all messages */
-document.getElementById('clearAllBtn').addEventListener('click', ()=>{
-  if(!confirm('Clear all messages?')) return;
-  jsonSet('inbox', []);
-  renderMessages();
-  renderLoggedUsers();
-});
+/* --- Theme & Logout --- */
+const themeToggle = document.getElementById('themeToggle');
+themeToggle.onclick = ()=>{ document.body.classList.toggle('dark-theme'); localStorage.setItem('theme', document.body.classList.contains('dark-theme')?'dark':'light'); themeToggle.textContent = document.body.classList.contains('dark-theme')?'☀️':'🌙'; }
+const savedTheme = localStorage.getItem('theme')||'light';
+if(savedTheme==='dark'){ document.body.classList.add('dark-theme'); themeToggle.textContent='☀️'; } else { themeToggle.textContent='🌙'; }
 
-/* Refresh and logout */
-document.getElementById('refreshBtn').addEventListener('click', ()=>{ renderMessages(); renderLoggedUsers(); });
-document.getElementById('logoutAdmin').addEventListener('click', ()=>{ sessionStorage.removeItem('admin'); alert('Admin signed out'); window.location.href = 'login.html'; });
+document.getElementById('logoutBtn').onclick = ()=>{
+    sessionStorage.removeItem('admin'); window.location.href='login.html';
+};
 
-/* initial render */
-renderLoggedUsers();
 renderMessages();
 </script>
+
 </body>
 </html>
