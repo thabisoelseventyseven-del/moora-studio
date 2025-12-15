@@ -5,210 +5,362 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Dashboard - Moora Studio</title>
 <link rel="stylesheet" href="style.css">
-
 <style>
-body{font-family:Arial;background:#0f0f15;color:#eee;margin:0}
-.top-left-nav{display:flex;gap:12px;padding:12px 20px;align-items:center}
-.btn{background:linear-gradient(135deg,#50e3c2,#ff6ec7);color:#fff;padding:8px 12px;border-radius:8px;border:none;cursor:pointer;text-decoration:none}
-.small-btn{font-size:.9rem}
-.header{text-align:center;padding:18px}
-.dashboard-container{max-width:1100px;margin:auto;padding:20px}
-.dashboard-cards{display:flex;flex-wrap:wrap;gap:14px}
-.dashboard-card{background:#1c1c27;border-radius:12px;padding:14px;flex:1 1 220px;text-align:center;cursor:pointer}
-.dashboard-card.selected{border:2px solid #ff6ec7}
-.template-price{color:#ffd6f0}
-.message-card{background:#1a1a28;padding:16px;border-radius:12px}
-textarea{width:100%;min-height:90px;background:#0f0f15;color:#eee;border:1px solid #333;border-radius:8px;padding:10px}
-.inbox-item{background:#29293f;padding:12px;border-radius:10px;margin-bottom:10px;color:#fff}
-.badge{background:#ff6ec7;border-radius:999px;padding:2px 8px;font-size:.8rem;display:none;margin-left:6px}
-footer{text-align:center;padding:20px;color:#aaa}
-.voice-controls{display:flex;gap:8px;align-items:center;margin-top:10px}
-.voice-controls button{padding:8px 10px;border-radius:8px;border:none;cursor:pointer}
-audio{width:100%;margin-top:8px}
+/* ---------------- Global ---------------- */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f5f5f5; /* Light mode default */
+    color: #222;
+    transition: background 0.3s, color 0.3s;
+}
+body.dark-theme {
+    background: #0f0f15;
+    color: #eee;
+}
+
+/* Top navigation */
+.top-left-nav {
+    display:flex;
+    gap:12px;
+    padding:12px 20px;
+    align-items:center;
+    background: inherit;
+}
+.btn {
+    background: linear-gradient(135deg,#50e3c2,#ff6ec7);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: bold;
+}
+.small-btn { font-size:0.9rem; }
+
+/* Header */
+.header {
+    text-align: center;
+    padding: 30px 10px;
+}
+.header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+}
+.header p {
+    font-size: 1.2rem;
+    color: #888;
+}
+
+/* Dashboard container */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto 60px;
+    padding: 0 20px;
+}
+
+/* Template section */
+.dashboard-section { margin-bottom: 40px; }
+.dashboard-section h2 {
+    font-size: 1.8rem;
+    margin-bottom: 16px;
+}
+
+.dashboard-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.dashboard-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    flex: 1 1 240px;
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    color: #222;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+body.dark-theme .dashboard-card {
+    background: #1c1c27;
+    color: #fff;
+}
+.dashboard-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+.dashboard-card.selected-template {
+    border: 2px solid #ff6ec7;
+}
+
+/* Template icon and text */
+.dashboard-card .icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+.dashboard-card .name {
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+.dashboard-card .price {
+    margin-top: 10px;
+    font-weight: bold;
+    font-size: 1rem;
+    color: #ff6ec7;
+}
+
+/* Message box */
+.message-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+body.dark-theme .message-card { background: #1a1a28; }
+#messageBox {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    background: #fff;
+    color: #222;
+    resize: vertical;
+}
+body.dark-theme #messageBox { background:#0f0f15; color:#eee; border:1px solid #333; }
+
+.message-controls {
+    display:flex;
+    gap:10px;
+    flex-wrap: wrap;
+}
+.message-controls .btn {
+    flex: 1 1 120px;
+}
+
+/* Badge for notifications */
+.badge {
+    background:#ff6ec7;
+    color:#fff;
+    border-radius:999px;
+    padding:2px 8px;
+    font-size:0.85rem;
+    display:none;
+    margin-left:6px;
+}
+
+/* Footer */
+footer {
+    padding:30px;
+    text-align:center;
+    color:#555;
+}
+
+/* Responsive */
+@media(max-width: 720px){
+    .dashboard-cards { flex-direction: column; }
+    .message-controls { flex-direction: column; }
+}
 </style>
 </head>
-
 <body>
 
+<!-- Top navigation -->
 <div class="top-left-nav">
-  <a class="btn small-btn" href="dashboard.html">Dashboard</a>
-  <a class="btn small-btn" href="inbox.html">Inbox <span id="inboxBadge" class="badge">0</span></a>
-  <button id="logoutBtn" class="btn small-btn">Logout</button>
-  <button id="themeToggle" class="btn small-btn">☀️</button>
+    <a class="btn small-btn" href="dashboard.html">Dashboard</a>
+    <a class="btn small-btn" href="inbox.html">
+        Inbox <span id="inboxBadge" class="badge">0</span>
+    </a>
+    <button id="logoutBtn" class="btn small-btn">Logout</button>
+    <button id="themeToggle" class="btn small-btn">🌙</button>
 </div>
 
 <header class="header">
-  <h1>Welcome, <span id="userName">User</span></h1>
+    <h1>Welcome, <span id="userName">User</span></h1>
+    <p>Select templates and send a message to admin</p>
 </header>
 
 <main class="dashboard-container">
 
-<section>
-<h2>Choose Templates</h2>
-<div id="templatesContainer" class="dashboard-cards"></div>
-<p><strong>Selected:</strong> <span id="currentTemplates">None</span></p>
+<!-- Template selection -->
+<section class="dashboard-section">
+    <h2>Choose Templates</h2>
+    <div id="templatesContainer" class="dashboard-cards"></div>
+    <p><strong>Selected:</strong> <span id="currentTemplates">None</span></p>
 </section>
 
-<section>
-<h2>Your Message</h2>
-<div class="message-card">
-<textarea id="messageBox" placeholder="Write message or record voice"></textarea>
-<div class="voice-controls">
-  <button id="recordBtn" class="btn">🎤 Record</button>
-  <button id="stopBtn" class="btn" disabled>⏹ Stop</button>
-  <button id="deleteVoiceBtn" class="btn" style="background:#ff4d4d">Delete Voice</button>
-</div>
-<audio id="userVoicePreview" controls style="display:none"></audio>
-<br>
-<button id="sendBtn" class="btn">Send to Admin</button>
-<p id="status" style="color:#50e3c2;display:none"></p>
-</div>
-</section>
-
-<section>
-<h2>Your Inbox (Admin Replies Only)</h2>
-<div id="inboxPreview"></div>
+<!-- Message box -->
+<section class="dashboard-section">
+    <h2>Your Message</h2>
+    <div class="message-card">
+        <textarea id="messageBox" placeholder="Write your message (optional if recording voice)"></textarea>
+        <div class="message-controls">
+            <button id="recordBtn" class="btn">🎤 Record</button>
+            <button id="stopBtn" class="btn" disabled>⏹ Stop</button>
+            <button id="deleteVoiceBtn" class="btn" style="background:#ff4d4d">Delete Voice</button>
+            <button id="sendBtn" class="btn">Send to Admin</button>
+        </div>
+        <audio id="userVoicePreview" controls style="display:none;width:100%;margin-top:10px"></audio>
+        <p id="statusNote" style="color:#50e3c2;font-weight:700;display:none;margin-top:10px"></p>
+    </div>
 </section>
 
 </main>
 
-<footer>© 2025 Moora Studio</footer>
+<footer>© 2025 Moora Studio — contact: thabisoelseventyseven@gmail.com</footer>
 
 <script>
-/* ---------- USER ---------- */
+// ----------------- USER -----------------
 let user = JSON.parse(sessionStorage.getItem("user"));
-if(!user){ user={name:"Demo User",email:"demo@example.com"}; sessionStorage.setItem("user",JSON.stringify(user)); }
-userName.textContent=user.name;
+if(!user){
+    user = { name: "Demo User", email:"demo@example.com" };
+    sessionStorage.setItem("user",JSON.stringify(user));
+}
+document.getElementById("userName").textContent = user.name;
 
-/* ---------- STORAGE ---------- */
-const getInbox=()=>JSON.parse(localStorage.getItem("inbox")||"[]");
-const setInbox=d=>localStorage.setItem("inbox",JSON.stringify(d));
-
-/* ---------- TEMPLATES ---------- */
-const templates=[
-{name:"Business Templates",price:"R250",icon:"💼"},
-{name:"Portfolio Templates",price:"R200",icon:"🎨"},
-{name:"Landing Pages",price:"R300",icon:"🌐"},
-{name:"Marketing Materials",price:"R180",icon:"📣"},
-{name:"CV Creation",price:"R100",icon:"📝"},
-{name:"University Application",price:"R150",icon:"🎓"},
-{name:"Report Templates",price:"R120",icon:"📊"},
-{name:"Web Templates",price:"R350",icon:"💻"}
+// ----------------- TEMPLATES -----------------
+const templates = [
+    {name:"Business Templates", price:"R250", icon:"💼"},
+    {name:"Portfolio Templates", price:"R200", icon:"🎨"},
+    {name:"Landing Pages", price:"R300", icon:"🌐"},
+    {name:"Marketing Materials", price:"R180", icon:"📣"},
+    {name:"CV Creation", price:"R100", icon:"📝"},
+    {name:"University Application", price:"R150", icon:"🎓"},
+    {name:"Report Templates", price:"R120", icon:"📊"},
+    {name:"Web Templates", price:"R350", icon:"💻"}
 ];
 
-let selected=[];
-const templatesContainer=document.getElementById("templatesContainer");
-templates.forEach(t=>{
-  const d=document.createElement("div");
-  d.className="dashboard-card";
-  d.innerHTML=`<div style="font-size:26px">${t.icon}</div><b>${t.name}</b><div class="template-price">${t.price}</div>`;
-  d.onclick=()=>{
-    if(!selected.includes(t.name)){
-      selected.push(t.name);
-      d.classList.add("selected");
-      currentTemplates.textContent=selected.join(" | ");
-    }
-  };
-  templatesContainer.appendChild(d);
-});
+let selectedTemplates = [];
+const templatesContainer = document.getElementById("templatesContainer");
+const currentTemplatesEl = document.getElementById("currentTemplates");
 
-/* ---------- VOICE RECORDING ---------- */
-let mediaRecorder=null;
-let audioChunks=[];
-let userVoiceDataUrl=null;
+function renderTemplates(){
+    templatesContainer.innerHTML = "";
+    templates.forEach(t=>{
+        const card = document.createElement("div");
+        card.className = "dashboard-card";
+        card.innerHTML = `<div class="icon">${t.icon}</div>
+                          <div class="name">${t.name}</div>
+                          <div class="price">${t.price}</div>`;
+        card.onclick = ()=>{
+            if(!selectedTemplates.includes(t.name)){
+                selectedTemplates.push(t.name);
+                card.classList.add("selected-template");
+                currentTemplatesEl.textContent = selectedTemplates.join(" | ");
+            }
+        };
+        templatesContainer.appendChild(card);
+    });
+}
+renderTemplates();
+
+// ----------------- VOICE RECORDING -----------------
+let mediaRecorder=null, audioChunks=[], userVoiceData=null;
 const recordBtn=document.getElementById("recordBtn");
 const stopBtn=document.getElementById("stopBtn");
 const deleteVoiceBtn=document.getElementById("deleteVoiceBtn");
 const userVoicePreview=document.getElementById("userVoicePreview");
 
-recordBtn.onclick=async()=>{
-  if(!navigator.mediaDevices?.getUserMedia){ alert("Recording not supported"); return; }
-  const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-  mediaRecorder=new MediaRecorder(stream);
-  audioChunks=[];
-  mediaRecorder.ondataavailable=e=>audioChunks.push(e.data);
-  mediaRecorder.onstop=()=>{
-    const blob=new Blob(audioChunks,{type:"audio/webm"});
-    const reader=new FileReader();
-    reader.onloadend=()=>{ userVoiceDataUrl=reader.result; userVoicePreview.src=userVoiceDataUrl; userVoicePreview.style.display="block"; };
-    reader.readAsDataURL(blob);
-  };
-  mediaRecorder.start();
-  recordBtn.disabled=true; stopBtn.disabled=false;
-};
-stopBtn.onclick=()=>{ if(mediaRecorder) mediaRecorder.stop(); recordBtn.disabled=false; stopBtn.disabled=true; };
-deleteVoiceBtn.onclick=()=>{ userVoiceDataUrl=null; userVoicePreview.src=""; userVoicePreview.style.display="none"; };
+recordBtn.addEventListener("click", async ()=>{
+    if(!navigator.mediaDevices?.getUserMedia){ alert("Recording not supported"); return; }
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks=[];
+    mediaRecorder.ondataavailable = e=>audioChunks.push(e.data);
+    mediaRecorder.onstop = ()=>{
+        const blob = new Blob(audioChunks, {type:"audio/webm"});
+        const reader = new FileReader();
+        reader.onloadend = ()=> {
+            userVoiceData = reader.result;
+            userVoicePreview.src = userVoiceData;
+            userVoicePreview.style.display="block";
+        };
+        reader.readAsDataURL(blob);
+    };
+    mediaRecorder.start();
+    recordBtn.disabled=true;
+    stopBtn.disabled=false;
+});
+stopBtn.addEventListener("click", ()=>{
+    mediaRecorder?.stop();
+    recordBtn.disabled=false;
+    stopBtn.disabled=true;
+});
+deleteVoiceBtn.addEventListener("click", ()=>{
+    userVoiceData=null;
+    userVoicePreview.src="";
+    userVoicePreview.style.display="none";
+});
 
-/* ---------- SEND MESSAGE ---------- */
+// ----------------- SEND MESSAGE -----------------
 const sendBtn=document.getElementById("sendBtn");
 const messageBox=document.getElementById("messageBox");
-const status=document.getElementById("status");
-const inboxBadge=document.getElementById("inboxBadge");
+const statusNote=document.getElementById("statusNote");
 
-sendBtn.onclick=()=>{
-  if(!selected.length) return alert("Select template");
-  if(!messageBox.value.trim() && !userVoiceDataUrl) return alert("Write message or record voice");
+function jsonGet(k, def){ try{ return JSON.parse(localStorage.getItem(k)||"null")||def; }catch(e){ return def; } }
+function jsonSet(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
 
-  const inbox=getInbox();
-  inbox.push({
-    id:"m"+Date.now(),
-    userName:user.name,
-    userEmail:user.email,
-    templates:[...selected],
-    userMessage:messageBox.value||null,
-    userVoice:userVoiceDataUrl||null,
-    adminReply:null,
-    adminVoice:null,
-    repliedAt:null,
-    replyRead:false,
-    sentAt:new Date().toISOString()
-  });
-  setInbox(inbox);
+sendBtn.addEventListener("click", ()=>{
+    const text = messageBox.value.trim();
+    if(selectedTemplates.length===0){ alert("Select at least one template"); return; }
+    if(!text && !userVoiceData){ alert("Add message or record voice"); return; }
 
-  messageBox.value=""; selected=[]; userVoiceDataUrl=null; userVoicePreview.src=""; userVoicePreview.style.display="none";
-  currentTemplates.textContent="None";
-  document.querySelectorAll(".selected").forEach(e=>e.classList.remove("selected"));
+    const inbox = jsonGet("inbox",[]);
+    inbox.push({
+        id:"m_"+Date.now(),
+        userName: user.name,
+        userEmail: user.email,
+        templates: selectedTemplates.slice(),
+        userMessage: text || null,
+        userVoice: userVoiceData || null,
+        adminReply:null,
+        adminVoice:null,
+        replyRead:false,
+        sentAt: new Date().toISOString()
+    });
+    jsonSet("inbox", inbox);
 
-  status.style.display="block"; status.textContent="Message sent to admin";
-  setTimeout(()=>status.style.display="none",2000);
+    // Reset UI
+    messageBox.value="";
+    userVoiceData=null;
+    userVoicePreview.src="";
+    userVoicePreview.style.display="none";
+    selectedTemplates=[];
+    currentTemplatesEl.textContent="None";
+    document.querySelectorAll(".selected-template").forEach(e=>e.classList.remove("selected-template"));
 
-  renderInboxPreview();
-};
+    statusNote.style.display="block";
+    statusNote.textContent="Message sent to admin";
+    setTimeout(()=>statusNote.style.display="none",2500);
 
-/* ---------- INBOX PREVIEW ---------- */
-const inboxPreview=document.getElementById("inboxPreview");
-function renderInboxPreview(){
-  const inbox=getInbox();
-  const replies=inbox.filter(m=>m.userEmail===user.email && (m.adminReply||m.adminVoice));
-  inboxPreview.innerHTML=replies.length?"":"<p>No replies yet.</p>";
-  replies.forEach(m=>{
-    const d=document.createElement("div");
-    d.className="inbox-item";
-    d.innerHTML=`<b>Admin:</b>${m.adminReply? `<p>${m.adminReply}</p>` : ""}${m.adminVoice? `<audio controls src="${m.adminVoice}"></audio>` : ""}<div style="margin-top:8px;color:#aaa;font-size:0.9rem">Templates: ${m.templates.join(" | ")}</div>`;
-    inboxPreview.appendChild(d);
-    m.replyRead=true;
-  });
-  setInbox(inbox);
-  updateBadge();
-}
+    updateBadge();
+});
 
+// ----------------- BADGE -----------------
+const inboxBadge = document.getElementById("inboxBadge");
 function updateBadge(){
-  const inbox=getInbox();
-  const unread=inbox.filter(m=>m.userEmail===user.email && (m.adminReply||m.adminVoice) && !m.replyRead).length;
-  inboxBadge.style.display=unread?"inline-block":"none";
-  inboxBadge.textContent=unread;
+    const inbox = jsonGet("inbox",[]);
+    const unread = inbox.filter(m=>m.userEmail===user.email && (m.adminReply || m.adminVoice) && !m.replyRead).length;
+    inboxBadge.style.display = unread>0?"inline-block":"none";
+    inboxBadge.textContent = unread;
 }
-
-renderInboxPreview();
 updateBadge();
 
-/* ---------- LOGOUT & THEME ---------- */
-document.getElementById("logoutBtn").onclick=()=>{
-  sessionStorage.removeItem("user");
-  location.href="login.html";
-};
-document.getElementById("themeToggle").onclick=()=>document.body.classList.toggle("light-theme");
-</script>
+// ----------------- LOGOUT -----------------
+document.getElementById("logoutBtn").addEventListener("click", ()=>{
+    sessionStorage.removeItem("user");
+    window.location.href="login.html";
+});
 
+// ----------------- LIGHT MODE FIRST -----------------
+document.body.classList.remove("dark-theme");
+themeToggle.textContent="🌙";
+
+</script>
 </body>
 </html>
