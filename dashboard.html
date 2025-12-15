@@ -27,16 +27,18 @@ body.dark-theme {
     padding:12px 20px;
 }
 .btn {
-    padding:8px 14px;
+    padding:10px 18px;
     border:none;
-    border-radius:8px;
+    border-radius:12px;
     cursor:pointer;
     font-weight:600;
     text-decoration:none;
     background:linear-gradient(135deg,#50e3c2,#ff6ec7);
     color:#fff;
+    transition: transform 0.2s;
 }
-.small-btn { font-size:0.9rem; }
+.btn:hover { transform: scale(1.05); }
+.small-btn { font-size:0.95rem; }
 
 /* Header */
 .header {
@@ -46,27 +48,30 @@ body.dark-theme {
 .header h1 { font-size:2.5rem; margin:0 0 8px; }
 
 /* Templates Section */
-.dashboard-container { max-width:1200px; margin:auto; padding:20px; }
+.dashboard-container { max-width:1400px; margin:auto; padding:20px; }
 .dashboard-cards {
     display:grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap:16px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap:24px;
     margin-top:20px;
 }
 .dashboard-card {
     background:#ffffff;
-    border-radius:12px;
-    padding:20px;
+    border-radius:20px;
+    padding:30px 20px;
     text-align:center;
     cursor:pointer;
     border:2px solid #ddd;
-    transition: transform 0.2s, border 0.2s;
+    transition: transform 0.2s, border 0.2s, box-shadow 0.2s;
 }
-.dashboard-card:hover { transform: translateY(-4px); }
+.dashboard-card:hover { 
+    transform: translateY(-6px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
 .dashboard-card.selected { border:3px solid #ff6ec7; }
-.dashboard-card .icon { font-size:40px; margin-bottom:12px; }
-.dashboard-card .name { font-size:1.2rem; font-weight:600; }
-.dashboard-card .price { margin-top:8px; font-weight:bold; color:#ff6ec7; }
+.dashboard-card .icon { font-size:60px; margin-bottom:16px; }
+.dashboard-card .name { font-size:1.4rem; font-weight:700; }
+.dashboard-card .price { margin-top:12px; font-weight:bold; color:#ff6ec7; font-size:1.1rem; }
 
 /* Selected templates display */
 .selected-templates { margin-top:16px; font-size:1.2rem; font-weight:600; }
@@ -76,16 +81,16 @@ body.dark-theme {
 .message-card {
     background:#ffffff;
     border-radius:12px;
-    padding:16px;
-    margin-top:30px;
-    box-shadow:0 3px 8px rgba(0,0,0,0.15);
+    padding:24px;
+    margin-top:40px;
+    box-shadow:0 3px 12px rgba(0,0,0,0.15);
 }
 .message-card textarea {
     width:100%;
-    min-height:100px;
-    border-radius:8px;
+    min-height:120px;
+    border-radius:12px;
     border:1px solid #ccc;
-    padding:10px;
+    padding:12px;
     font-size:1rem;
 }
 
@@ -97,23 +102,24 @@ body.dark-theme {
     flex-wrap:wrap;
 }
 .voice-controls button {
-    padding:6px 12px;
-    border-radius:6px;
+    padding:8px 14px;
+    border-radius:8px;
     border:none;
     cursor:pointer;
     background:#ff6ec7;
     color:white;
+    font-size:0.95rem;
 }
 
 /* Footer */
-footer { text-align:center; padding:20px; color:#555; }
+footer { text-align:center; padding:20px; color:#555; font-size:0.9rem; }
 
 /* Notification badge */
 .badge {
     background: #ff6ec7;
     border-radius: 999px;
-    padding: 2px 8px;
-    font-size: 0.8rem;
+    padding: 3px 9px;
+    font-size: 0.85rem;
     display: none;
     vertical-align: super;
 }
@@ -138,7 +144,7 @@ footer { text-align:center; padding:20px; color:#555; }
 
 <!-- Templates Section -->
 <section>
-<h2>Choose Templates</h2>
+<h2>What We Offer</h2>
 <div id="templatesContainer" class="dashboard-cards"></div>
 <p class="selected-templates"><strong>Selected:</strong> <span id="currentTemplates">None</span></p>
 </section>
@@ -172,13 +178,13 @@ const setInbox = d => localStorage.setItem("inbox", JSON.stringify(d));
 
 /* ---------------- TEMPLATES ---------------- */
 const templates = [
-  {name:"Business",price:"R250",icon:"💼"},
-  {name:"Portfolio",price:"R200",icon:"🎨"},
-  {name:"Landing Page",price:"R300",icon:"🌐"},
-  {name:"Marketing",price:"R180",icon:"📣"},
-  {name:"CV",price:"R100",icon:"📝"},
-  {name:"University Apps",price:"R150",icon:"🎓"},
-  {name:"Report",price:"R120",icon:"📊"},
+  {name:"Business Templates",price:"R250",icon:"💼"},
+  {name:"Portfolio Templates",price:"R200",icon:"🎨"},
+  {name:"Landing Pages",price:"R300",icon:"🌐"},
+  {name:"Marketing Materials",price:"R180",icon:"📣"},
+  {name:"CV Creation",price:"R100",icon:"📝"},
+  {name:"University Applications",price:"R150",icon:"🎓"},
+  {name:"Report Templates",price:"R120",icon:"📊"},
   {name:"Web Templates",price:"R350",icon:"💻"}
 ];
 
