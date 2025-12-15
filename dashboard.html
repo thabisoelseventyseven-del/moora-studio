@@ -1,366 +1,316 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Dashboard - Moora Studio</title>
 <link rel="stylesheet" href="style.css">
 <style>
-/* ---------------- Global ---------------- */
+/* --- Base Styles --- */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     background: #f5f5f5; /* Light mode default */
-    color: #222;
-    transition: background 0.3s, color 0.3s;
+    color: #111;
+    transition: all 0.3s;
 }
 body.dark-theme {
     background: #0f0f15;
     color: #eee;
 }
 
-/* Top navigation */
 .top-left-nav {
     display:flex;
-    gap:12px;
-    padding:12px 20px;
+    gap:10px;
+    padding:16px 20px;
+    justify-content:flex-end;
     align-items:center;
+    position: sticky;
+    top:0;
     background: inherit;
+    z-index: 1000;
 }
+
 .btn {
     background: linear-gradient(135deg,#50e3c2,#ff6ec7);
     color: #fff;
-    padding: 10px 16px;
-    border-radius: 8px;
+    padding: 10px 18px;
+    border-radius: 10px;
     border: none;
     cursor: pointer;
     text-decoration: none;
-    font-weight: bold;
+    font-weight: 600;
 }
-.small-btn { font-size:0.9rem; }
+.small-btn { font-size: 0.9rem; }
 
-/* Header */
 .header {
-    text-align: center;
-    padding: 30px 10px;
+    text-align:center;
+    padding: 40px 20px 20px;
 }
 .header h1 {
-    font-size: 2.5rem;
+    font-size: 2.6rem;
     margin-bottom: 8px;
 }
-.header p {
-    font-size: 1.2rem;
-    color: #888;
-}
+.header p { font-size:1.1rem; color: #666; }
 
-/* Dashboard container */
 .dashboard-container {
-    max-width: 1200px;
-    margin: 0 auto 60px;
-    padding: 0 20px;
+    max-width: 1100px;
+    margin: 20px auto;
+    padding: 0 20px 60px;
 }
 
-/* Template section */
-.dashboard-section { margin-bottom: 40px; }
-.dashboard-section h2 {
-    font-size: 1.8rem;
-    margin-bottom: 16px;
-}
-
+/* --- Templates --- */
+.dashboard-section h2 { font-size:1.6rem; margin-bottom:12px; }
 .dashboard-cards {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:18px;
 }
-
 .dashboard-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 20px;
-    flex: 1 1 240px;
-    cursor: pointer;
-    text-align: center;
-    transition: transform 0.2s, box-shadow 0.2s;
-    color: #222;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-body.dark-theme .dashboard-card {
-    background: #1c1c27;
-    color: #fff;
-}
-.dashboard-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    background:#1c1c27;
+    border-radius:14px;
+    padding:20px;
+    flex:1 1 240px;
+    text-align:center;
+    cursor:pointer;
+    color:#fff;
+    transition: all 0.2s;
 }
 .dashboard-card.selected-template {
-    border: 2px solid #ff6ec7;
+    border:3px solid #ff6ec7;
+    background:#29293f;
 }
-
-/* Template icon and text */
-.dashboard-card .icon {
+.dashboard-card div.icon {
     font-size: 48px;
-    margin-bottom: 12px;
+    margin-bottom:8px;
 }
-.dashboard-card .name {
-    font-weight: 700;
-    font-size: 1.2rem;
-}
-.dashboard-card .price {
-    margin-top: 10px;
-    font-weight: bold;
+.template-price {
     font-size: 1rem;
-    color: #ff6ec7;
+    margin-top:6px;
+    color:#ffd6f0;
 }
 
-/* Message box */
+/* --- Message Box --- */
 .message-card {
-    background: #fff;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background:#1a1a28;
+    padding:20px;
+    border-radius:14px;
+    margin-top:20px;
 }
-body.dark-theme .message-card { background: #1a1a28; }
 #messageBox {
-    width: 100%;
-    min-height: 120px;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 1rem;
-    margin-bottom: 12px;
-    background: #fff;
-    color: #222;
-    resize: vertical;
+    width:100%;
+    min-height:120px;
+    padding:12px;
+    border-radius:10px;
+    background:#0f0f15;
+    color:#eee;
+    border:1px solid #333;
+    resize:vertical;
 }
-body.dark-theme #messageBox { background:#0f0f15; color:#eee; border:1px solid #333; }
-
-.message-controls {
-    display:flex;
-    gap:10px;
-    flex-wrap: wrap;
-}
-.message-controls .btn {
-    flex: 1 1 120px;
+#selectedTemplatesDisplay {
+    font-size:1.1rem;
+    font-weight:600;
+    color:#ffd6f0;
+    margin-bottom:12px;
 }
 
-/* Badge for notifications */
+/* --- Inbox preview --- */
+.inbox-section {
+    margin-top:30px;
+}
+.inbox-list {
+    margin-top:12px;
+}
+.inbox-item {
+    background:#29293f;
+    padding:16px;
+    border-radius:12px;
+    margin-bottom:12px;
+    color:#fff;
+}
+
+/* --- Badge --- */
 .badge {
     background:#ff6ec7;
     color:#fff;
     border-radius:999px;
-    padding:2px 8px;
+    padding:4px 10px;
     font-size:0.85rem;
-    display:none;
     margin-left:6px;
+    display:none;
 }
 
-/* Footer */
-footer {
-    padding:30px;
-    text-align:center;
-    color:#555;
-}
-
-/* Responsive */
-@media(max-width: 720px){
-    .dashboard-cards { flex-direction: column; }
-    .message-controls { flex-direction: column; }
+/* --- Responsive --- */
+@media(max-width:720px){
+    .dashboard-cards{ flex-direction: column; }
 }
 </style>
 </head>
+
 <body>
 
-<!-- Top navigation -->
+<!-- Top Navigation -->
 <div class="top-left-nav">
-    <a class="btn small-btn" href="dashboard.html">Dashboard</a>
-    <a class="btn small-btn" href="inbox.html">
-        Inbox <span id="inboxBadge" class="badge">0</span>
-    </a>
-    <button id="logoutBtn" class="btn small-btn">Logout</button>
     <button id="themeToggle" class="btn small-btn">🌙</button>
+    <button id="logoutBtn" class="btn small-btn">Logout</button>
+    <a href="inbox.html" class="btn small-btn">Inbox <span id="inboxBadge" class="badge">0</span></a>
 </div>
 
 <header class="header">
     <h1>Welcome, <span id="userName">User</span></h1>
-    <p>Select templates and send a message to admin</p>
+    <p>Select templates and send a message to admin (text or voice)</p>
 </header>
 
 <main class="dashboard-container">
 
-<!-- Template selection -->
 <section class="dashboard-section">
-    <h2>Choose Templates</h2>
-    <div id="templatesContainer" class="dashboard-cards"></div>
-    <p><strong>Selected:</strong> <span id="currentTemplates">None</span></p>
+<h2>Choose Templates</h2>
+<div id="templatesContainer" class="dashboard-cards"></div>
+<div id="selectedTemplatesDisplay">Selected: None</div>
 </section>
 
-<!-- Message box -->
 <section class="dashboard-section">
-    <h2>Your Message</h2>
-    <div class="message-card">
-        <textarea id="messageBox" placeholder="Write your message (optional if recording voice)"></textarea>
-        <div class="message-controls">
-            <button id="recordBtn" class="btn">🎤 Record</button>
-            <button id="stopBtn" class="btn" disabled>⏹ Stop</button>
-            <button id="deleteVoiceBtn" class="btn" style="background:#ff4d4d">Delete Voice</button>
-            <button id="sendBtn" class="btn">Send to Admin</button>
-        </div>
-        <audio id="userVoicePreview" controls style="display:none;width:100%;margin-top:10px"></audio>
-        <p id="statusNote" style="color:#50e3c2;font-weight:700;display:none;margin-top:10px"></p>
-    </div>
+<h2>Your Message</h2>
+<div class="message-card">
+<textarea id="messageBox" placeholder="Write your message here or record a voice note"></textarea>
+<br><br>
+<button id="sendBtn" class="btn">Send to Admin</button>
+<p id="statusNote" style="color:#50e3c2;font-weight:700;display:none;margin-top:10px"></p>
+</div>
+</section>
+
+<section class="dashboard-section inbox-section">
+<h2>Inbox (Admin Replies)</h2>
+<div id="inboxList" class="inbox-list"></div>
 </section>
 
 </main>
 
-<footer>© 2025 Moora Studio — contact: thabisoelseventyseven@gmail.com</footer>
-
 <script>
-// ----------------- USER -----------------
-let user = JSON.parse(sessionStorage.getItem("user"));
-if(!user){
-    user = { name: "Demo User", email:"demo@example.com" };
-    sessionStorage.setItem("user",JSON.stringify(user));
-}
-document.getElementById("userName").textContent = user.name;
+/* --- User Setup --- */
+let user = JSON.parse(sessionStorage.getItem('user'));
+if(!user){ user={name:"Demo User",email:"demo@example.com"}; sessionStorage.setItem('user',JSON.stringify(user)); }
+document.getElementById('userName').textContent=user.name;
 
-// ----------------- TEMPLATES -----------------
+/* --- Templates --- */
 const templates = [
-    {name:"Business Templates", price:"R250", icon:"💼"},
-    {name:"Portfolio Templates", price:"R200", icon:"🎨"},
-    {name:"Landing Pages", price:"R300", icon:"🌐"},
-    {name:"Marketing Materials", price:"R180", icon:"📣"},
-    {name:"CV Creation", price:"R100", icon:"📝"},
-    {name:"University Application", price:"R150", icon:"🎓"},
-    {name:"Report Templates", price:"R120", icon:"📊"},
-    {name:"Web Templates", price:"R350", icon:"💻"}
+  {name:"Business",price:"R250",icon:"💼"},
+  {name:"Portfolio",price:"R200",icon:"🎨"},
+  {name:"Landing Page",price:"R300",icon:"🌐"},
+  {name:"Marketing",price:"R180",icon:"📣"},
+  {name:"CV Creation",price:"R100",icon:"📝"},
+  {name:"University Application",price:"R150",icon:"🎓"},
+  {name:"Report Templates",price:"R120",icon:"📊"},
+  {name:"Web Templates",price:"R350",icon:"💻"}
 ];
+let selectedTemplates=[];
+const templatesContainer = document.getElementById('templatesContainer');
+const selectedTemplatesDisplay = document.getElementById('selectedTemplatesDisplay');
 
-let selectedTemplates = [];
-const templatesContainer = document.getElementById("templatesContainer");
-const currentTemplatesEl = document.getElementById("currentTemplates");
-
-function renderTemplates(){
-    templatesContainer.innerHTML = "";
-    templates.forEach(t=>{
-        const card = document.createElement("div");
-        card.className = "dashboard-card";
-        card.innerHTML = `<div class="icon">${t.icon}</div>
-                          <div class="name">${t.name}</div>
-                          <div class="price">${t.price}</div>`;
-        card.onclick = ()=>{
-            if(!selectedTemplates.includes(t.name)){
-                selectedTemplates.push(t.name);
-                card.classList.add("selected-template");
-                currentTemplatesEl.textContent = selectedTemplates.join(" | ");
-            }
-        };
-        templatesContainer.appendChild(card);
-    });
-}
-renderTemplates();
-
-// ----------------- VOICE RECORDING -----------------
-let mediaRecorder=null, audioChunks=[], userVoiceData=null;
-const recordBtn=document.getElementById("recordBtn");
-const stopBtn=document.getElementById("stopBtn");
-const deleteVoiceBtn=document.getElementById("deleteVoiceBtn");
-const userVoicePreview=document.getElementById("userVoicePreview");
-
-recordBtn.addEventListener("click", async ()=>{
-    if(!navigator.mediaDevices?.getUserMedia){ alert("Recording not supported"); return; }
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks=[];
-    mediaRecorder.ondataavailable = e=>audioChunks.push(e.data);
-    mediaRecorder.onstop = ()=>{
-        const blob = new Blob(audioChunks, {type:"audio/webm"});
-        const reader = new FileReader();
-        reader.onloadend = ()=> {
-            userVoiceData = reader.result;
-            userVoicePreview.src = userVoiceData;
-            userVoicePreview.style.display="block";
-        };
-        reader.readAsDataURL(blob);
-    };
-    mediaRecorder.start();
-    recordBtn.disabled=true;
-    stopBtn.disabled=false;
-});
-stopBtn.addEventListener("click", ()=>{
-    mediaRecorder?.stop();
-    recordBtn.disabled=false;
-    stopBtn.disabled=true;
-});
-deleteVoiceBtn.addEventListener("click", ()=>{
-    userVoiceData=null;
-    userVoicePreview.src="";
-    userVoicePreview.style.display="none";
+templates.forEach((t)=>{
+  const div=document.createElement('div');
+  div.className='dashboard-card';
+  div.innerHTML=`<div class="icon">${t.icon}</div><b>${t.name}</b><div class="template-price">${t.price}</div>`;
+  div.addEventListener('click', ()=>{
+      if(!selectedTemplates.includes(t.name)){
+          selectedTemplates.push(t.name);
+          div.classList.add('selected-template');
+          selectedTemplatesDisplay.innerHTML = 'Selected: ' + selectedTemplates.map(n=>{
+            const item = templates.find(tt=>tt.name===n);
+            return item.icon+' '+item.name;
+          }).join(' | ');
+      }
+  });
+  templatesContainer.appendChild(div);
 });
 
-// ----------------- SEND MESSAGE -----------------
-const sendBtn=document.getElementById("sendBtn");
-const messageBox=document.getElementById("messageBox");
-const statusNote=document.getElementById("statusNote");
+/* --- Inbox helpers --- */
+function jsonGet(key,def=[]){try{return JSON.parse(localStorage.getItem(key)||'null')||def}catch(e){return def}}
+function jsonSet(key,val){localStorage.setItem(key,JSON.stringify(val))}
 
-function jsonGet(k, def){ try{ return JSON.parse(localStorage.getItem(k)||"null")||def; }catch(e){ return def; } }
-function jsonSet(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
+/* --- Send message --- */
+const sendBtn = document.getElementById('sendBtn');
+const messageBox = document.getElementById('messageBox');
+const statusNote = document.getElementById('statusNote');
 
-sendBtn.addEventListener("click", ()=>{
+sendBtn.addEventListener('click', ()=>{
     const text = messageBox.value.trim();
-    if(selectedTemplates.length===0){ alert("Select at least one template"); return; }
-    if(!text && !userVoiceData){ alert("Add message or record voice"); return; }
+    if(selectedTemplates.length===0){ alert('Select at least one template'); return; }
+    if(!text){ alert('Add text or voice'); return; }
 
-    const inbox = jsonGet("inbox",[]);
+    const inbox = jsonGet('inbox',[]);
     inbox.push({
-        id:"m_"+Date.now(),
-        userName: user.name,
-        userEmail: user.email,
-        templates: selectedTemplates.slice(),
-        userMessage: text || null,
-        userVoice: userVoiceData || null,
-        adminReply:null,
+        id:'m_'+Date.now(),
+        userName:user.name,
+        userEmail:user.email,
+        templates:selectedTemplates.slice(),
+        message:text,
+        userVoice:null,
+        replyText:null,
         adminVoice:null,
+        repliedAt:null,
         replyRead:false,
-        sentAt: new Date().toISOString()
+        sentAt:new Date().toISOString()
     });
-    jsonSet("inbox", inbox);
+    jsonSet('inbox',inbox);
 
-    // Reset UI
-    messageBox.value="";
-    userVoiceData=null;
-    userVoicePreview.src="";
-    userVoicePreview.style.display="none";
+    messageBox.value='';
     selectedTemplates=[];
-    currentTemplatesEl.textContent="None";
-    document.querySelectorAll(".selected-template").forEach(e=>e.classList.remove("selected-template"));
+    document.querySelectorAll('.dashboard-card.selected-template').forEach(el=>el.classList.remove('selected-template'));
+    selectedTemplatesDisplay.innerHTML='Selected: None';
+    statusNote.style.display='block';
+    statusNote.textContent='Message sent to admin';
+    setTimeout(()=>statusNote.style.display='none',2500);
+    renderInbox();
+});
 
-    statusNote.style.display="block";
-    statusNote.textContent="Message sent to admin";
-    setTimeout(()=>statusNote.style.display="none",2500);
+/* --- Inbox Rendering --- */
+const inboxList = document.getElementById('inboxList');
+const inboxBadge = document.getElementById('inboxBadge');
 
+function renderInbox(){
+    const inbox = jsonGet('inbox',[]);
+    const replies = inbox.filter(m => m.userEmail===user.email && (m.replyText || m.adminVoice));
+    inboxList.innerHTML='';
+    if(replies.length===0){ inboxList.innerHTML='<p>No replies from admin.</p>'; }
+    else{
+        replies.forEach(m=>{
+            const div=document.createElement('div');
+            div.className='inbox-item';
+            div.innerHTML=`${m.adminVoice?'<audio controls src="'+m.adminVoice+'"></audio>':''}
+                           ${m.replyText?'<p>'+m.replyText+'</p>':''}
+                           <small>Templates: ${m.templates.join(' | ')}</small>`;
+            inboxList.appendChild(div);
+            if(!m.replyRead) m.replyRead=true;
+        });
+        jsonSet('inbox',inbox);
+    }
     updateBadge();
-});
-
-// ----------------- BADGE -----------------
-const inboxBadge = document.getElementById("inboxBadge");
-function updateBadge(){
-    const inbox = jsonGet("inbox",[]);
-    const unread = inbox.filter(m=>m.userEmail===user.email && (m.adminReply || m.adminVoice) && !m.replyRead).length;
-    inboxBadge.style.display = unread>0?"inline-block":"none";
-    inboxBadge.textContent = unread;
 }
-updateBadge();
 
-// ----------------- LOGOUT -----------------
-document.getElementById("logoutBtn").addEventListener("click", ()=>{
-    sessionStorage.removeItem("user");
-    window.location.href="login.html";
+function updateBadge(){
+    const inbox = jsonGet('inbox',[]);
+    const unread = inbox.filter(m=>m.userEmail===user.email && (m.replyText || m.adminVoice) && !m.replyRead).length;
+    if(unread>0){ inboxBadge.style.display='inline-block'; inboxBadge.textContent=unread; }
+    else{ inboxBadge.style.display='none'; }
+}
+
+/* --- Theme & Logout --- */
+const themeToggle = document.getElementById('themeToggle');
+themeToggle.addEventListener('click', ()=>{
+    document.body.classList.toggle('dark-theme');
+    if(document.body.classList.contains('dark-theme')){ localStorage.setItem('theme','dark'); themeToggle.textContent='☀️'; }
+    else{ localStorage.setItem('theme','light'); themeToggle.textContent='🌙'; }
+});
+const savedTheme = localStorage.getItem('theme')||'light';
+if(savedTheme==='dark'){ document.body.classList.add('dark-theme'); themeToggle.textContent='☀️'; } else { themeToggle.textContent='🌙'; }
+
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+    sessionStorage.removeItem('user');
+    window.location.href='login.html';
 });
 
-// ----------------- LIGHT MODE FIRST -----------------
-document.body.classList.remove("dark-theme");
-themeToggle.textContent="🌙";
-
+renderInbox();
 </script>
 </body>
 </html>
