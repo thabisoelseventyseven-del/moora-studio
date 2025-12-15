@@ -4,12 +4,11 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Dashboard - Moora Studio</title>
-
 <link rel="stylesheet" href="style.css">
 
 <style>
 body{font-family:Arial;background:#0f0f15;color:#eee;margin:0}
-.top-left-nav{display:flex;gap:12px;padding:12px 20px}
+.top-left-nav{display:flex;gap:12px;padding:12px 20px;align-items:center}
 .btn{background:linear-gradient(135deg,#50e3c2,#ff6ec7);color:#fff;padding:8px 12px;border-radius:8px;border:none;cursor:pointer;text-decoration:none}
 .small-btn{font-size:.9rem}
 .header{text-align:center;padding:18px}
@@ -20,9 +19,12 @@ body{font-family:Arial;background:#0f0f15;color:#eee;margin:0}
 .template-price{color:#ffd6f0}
 .message-card{background:#1a1a28;padding:16px;border-radius:12px}
 textarea{width:100%;min-height:90px;background:#0f0f15;color:#eee;border:1px solid #333;border-radius:8px;padding:10px}
-.inbox-item{background:#29293f;padding:12px;border-radius:10px;margin-bottom:10px}
-.badge{background:#ff6ec7;border-radius:999px;padding:2px 8px;font-size:.8rem;display:none}
+.inbox-item{background:#29293f;padding:12px;border-radius:10px;margin-bottom:10px;color:#fff}
+.badge{background:#ff6ec7;border-radius:999px;padding:2px 8px;font-size:.8rem;display:none;margin-left:6px}
 footer{text-align:center;padding:20px;color:#aaa}
+.voice-controls{display:flex;gap:8px;align-items:center;margin-top:10px}
+.voice-controls button{padding:8px 10px;border-radius:8px;border:none;cursor:pointer}
+audio{width:100%;margin-top:8px}
 </style>
 </head>
 
@@ -30,14 +32,13 @@ footer{text-align:center;padding:20px;color:#aaa}
 
 <div class="top-left-nav">
   <a class="btn small-btn" href="dashboard.html">Dashboard</a>
-  <a class="btn small-btn" href="inbox.html">
-    Inbox <span id="inboxBadge" class="badge">0</span>
-  </a>
+  <a class="btn small-btn" href="inbox.html">Inbox <span id="inboxBadge" class="badge">0</span></a>
   <button id="logoutBtn" class="btn small-btn">Logout</button>
+  <button id="themeToggle" class="btn small-btn">☀️</button>
 </div>
 
 <header class="header">
-  <h1>Welcome, <span id="userName"></span></h1>
+  <h1>Welcome, <span id="userName">User</span></h1>
 </header>
 
 <main class="dashboard-container">
@@ -52,7 +53,13 @@ footer{text-align:center;padding:20px;color:#aaa}
 <h2>Your Message</h2>
 <div class="message-card">
 <textarea id="messageBox" placeholder="Write message or record voice"></textarea>
-<br><br>
+<div class="voice-controls">
+  <button id="recordBtn" class="btn">🎤 Record</button>
+  <button id="stopBtn" class="btn" disabled>⏹ Stop</button>
+  <button id="deleteVoiceBtn" class="btn" style="background:#ff4d4d">Delete Voice</button>
+</div>
+<audio id="userVoicePreview" controls style="display:none"></audio>
+<br>
 <button id="sendBtn" class="btn">Send to Admin</button>
 <p id="status" style="color:#50e3c2;display:none"></p>
 </div>
@@ -70,10 +77,7 @@ footer{text-align:center;padding:20px;color:#aaa}
 <script>
 /* ---------- USER ---------- */
 let user = JSON.parse(sessionStorage.getItem("user"));
-if(!user){
-  user={name:"Demo User",email:"demo@example.com"};
-  sessionStorage.setItem("user",JSON.stringify(user));
-}
+if(!user){ user={name:"Demo User",email:"demo@example.com"}; sessionStorage.setItem("user",JSON.stringify(user)); }
 userName.textContent=user.name;
 
 /* ---------- STORAGE ---------- */
@@ -82,14 +86,18 @@ const setInbox=d=>localStorage.setItem("inbox",JSON.stringify(d));
 
 /* ---------- TEMPLATES ---------- */
 const templates=[
-{name:"Business",price:"R250",icon:"💼"},
-{name:"Portfolio",price:"R200",icon:"🎨"},
-{name:"Landing Page",price:"R300",icon:"🌐"},
-{name:"Marketing",price:"R180",icon:"📣"},
-{name:"CV",price:"R100",icon:"📝"}
+{name:"Business Templates",price:"R250",icon:"💼"},
+{name:"Portfolio Templates",price:"R200",icon:"🎨"},
+{name:"Landing Pages",price:"R300",icon:"🌐"},
+{name:"Marketing Materials",price:"R180",icon:"📣"},
+{name:"CV Creation",price:"R100",icon:"📝"},
+{name:"University Application",price:"R150",icon:"🎓"},
+{name:"Report Templates",price:"R120",icon:"📊"},
+{name:"Web Templates",price:"R350",icon:"💻"}
 ];
 
 let selected=[];
+const templatesContainer=document.getElementById("templatesContainer");
 templates.forEach(t=>{
   const d=document.createElement("div");
   d.className="dashboard-card";
@@ -104,10 +112,42 @@ templates.forEach(t=>{
   templatesContainer.appendChild(d);
 });
 
+/* ---------- VOICE RECORDING ---------- */
+let mediaRecorder=null;
+let audioChunks=[];
+let userVoiceDataUrl=null;
+const recordBtn=document.getElementById("recordBtn");
+const stopBtn=document.getElementById("stopBtn");
+const deleteVoiceBtn=document.getElementById("deleteVoiceBtn");
+const userVoicePreview=document.getElementById("userVoicePreview");
+
+recordBtn.onclick=async()=>{
+  if(!navigator.mediaDevices?.getUserMedia){ alert("Recording not supported"); return; }
+  const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+  mediaRecorder=new MediaRecorder(stream);
+  audioChunks=[];
+  mediaRecorder.ondataavailable=e=>audioChunks.push(e.data);
+  mediaRecorder.onstop=()=>{
+    const blob=new Blob(audioChunks,{type:"audio/webm"});
+    const reader=new FileReader();
+    reader.onloadend=()=>{ userVoiceDataUrl=reader.result; userVoicePreview.src=userVoiceDataUrl; userVoicePreview.style.display="block"; };
+    reader.readAsDataURL(blob);
+  };
+  mediaRecorder.start();
+  recordBtn.disabled=true; stopBtn.disabled=false;
+};
+stopBtn.onclick=()=>{ if(mediaRecorder) mediaRecorder.stop(); recordBtn.disabled=false; stopBtn.disabled=true; };
+deleteVoiceBtn.onclick=()=>{ userVoiceDataUrl=null; userVoicePreview.src=""; userVoicePreview.style.display="none"; };
+
 /* ---------- SEND MESSAGE ---------- */
+const sendBtn=document.getElementById("sendBtn");
+const messageBox=document.getElementById("messageBox");
+const status=document.getElementById("status");
+const inboxBadge=document.getElementById("inboxBadge");
+
 sendBtn.onclick=()=>{
   if(!selected.length) return alert("Select template");
-  if(!messageBox.value.trim()) return alert("Write a message");
+  if(!messageBox.value.trim() && !userVoiceDataUrl) return alert("Write message or record voice");
 
   const inbox=getInbox();
   inbox.push({
@@ -115,36 +155,36 @@ sendBtn.onclick=()=>{
     userName:user.name,
     userEmail:user.email,
     templates:[...selected],
-    userMessage:messageBox.value,
-    userVoice:null,
+    userMessage:messageBox.value||null,
+    userVoice:userVoiceDataUrl||null,
     adminReply:null,
     adminVoice:null,
     repliedAt:null,
     replyRead:false,
     sentAt:new Date().toISOString()
   });
-
   setInbox(inbox);
-  messageBox.value="";
-  selected=[];
+
+  messageBox.value=""; selected=[]; userVoiceDataUrl=null; userVoicePreview.src=""; userVoicePreview.style.display="none";
   currentTemplates.textContent="None";
   document.querySelectorAll(".selected").forEach(e=>e.classList.remove("selected"));
-  status.style.display="block";
-  status.textContent="Message sent to admin";
+
+  status.style.display="block"; status.textContent="Message sent to admin";
   setTimeout(()=>status.style.display="none",2000);
+
   renderInboxPreview();
 };
 
 /* ---------- INBOX PREVIEW ---------- */
+const inboxPreview=document.getElementById("inboxPreview");
 function renderInboxPreview(){
   const inbox=getInbox();
-  const replies=inbox.filter(m=>m.userEmail===user.email && m.adminReply);
-  inboxPreview.innerHTML=replies.length?"":
-    "<p>No replies yet.</p>";
+  const replies=inbox.filter(m=>m.userEmail===user.email && (m.adminReply||m.adminVoice));
+  inboxPreview.innerHTML=replies.length?"":"<p>No replies yet.</p>";
   replies.forEach(m=>{
     const d=document.createElement("div");
     d.className="inbox-item";
-    d.innerHTML=`<b>Admin:</b><p>${m.adminReply}</p>`;
+    d.innerHTML=`<b>Admin:</b>${m.adminReply? `<p>${m.adminReply}</p>` : ""}${m.adminVoice? `<audio controls src="${m.adminVoice}"></audio>` : ""}<div style="margin-top:8px;color:#aaa;font-size:0.9rem">Templates: ${m.templates.join(" | ")}</div>`;
     inboxPreview.appendChild(d);
     m.replyRead=true;
   });
@@ -154,7 +194,7 @@ function renderInboxPreview(){
 
 function updateBadge(){
   const inbox=getInbox();
-  const unread=inbox.filter(m=>m.userEmail===user.email && m.adminReply && !m.replyRead).length;
+  const unread=inbox.filter(m=>m.userEmail===user.email && (m.adminReply||m.adminVoice) && !m.replyRead).length;
   inboxBadge.style.display=unread?"inline-block":"none";
   inboxBadge.textContent=unread;
 }
@@ -162,11 +202,12 @@ function updateBadge(){
 renderInboxPreview();
 updateBadge();
 
-/* ---------- LOGOUT ---------- */
-logoutBtn.onclick=()=>{
+/* ---------- LOGOUT & THEME ---------- */
+document.getElementById("logoutBtn").onclick=()=>{
   sessionStorage.removeItem("user");
   location.href="login.html";
 };
+document.getElementById("themeToggle").onclick=()=>document.body.classList.toggle("light-theme");
 </script>
 
 </body>
