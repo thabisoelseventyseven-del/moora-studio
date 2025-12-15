@@ -4,13 +4,12 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Dashboard - Moora Studio</title>
-<link rel="stylesheet" href="style.css">
 <style>
 body {
     font-family: Arial, sans-serif;
-    background: #f5f5f5; /* light mode by default */
-    color: #111;
     margin: 0;
+    background: #f5f5f5;
+    color: #111;
     transition: background 0.3s, color 0.3s;
 }
 body.dark-theme {
@@ -24,6 +23,7 @@ body.dark-theme {
     justify-content: flex-end;
     gap: 12px;
     padding: 12px 20px;
+    flex-wrap: wrap;
 }
 .btn {
     background: linear-gradient(135deg,#50e3c2,#ff6ec7);
@@ -34,6 +34,7 @@ body.dark-theme {
     cursor: pointer;
     font-weight: 600;
     text-decoration: none;
+    white-space: nowrap;
 }
 .small-btn { font-size: 0.9rem; }
 
@@ -54,38 +55,27 @@ body.dark-theme {
     padding: 20px;
 }
 
-/* Template section */
+/* Templates grid */
 .dashboard-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 16px;
     margin-top: 20px;
 }
 .dashboard-card {
-    background: #1c1c27;
+    background: #ffffff;
     border-radius: 12px;
     padding: 20px;
     text-align: center;
     cursor: pointer;
+    border: 2px solid #ddd;
     transition: transform 0.2s, border 0.2s;
 }
 .dashboard-card:hover { transform: translateY(-4px); }
-.dashboard-card.selected {
-    border: 3px solid #ff6ec7;
-}
-.dashboard-card .icon {
-    font-size: 40px;
-    margin-bottom: 12px;
-}
-.dashboard-card .name {
-    font-size: 1.2rem;
-    font-weight: 600;
-}
-.dashboard-card .price {
-    margin-top: 8px;
-    font-weight: bold;
-    color: #ffd6f0;
-}
+.dashboard-card.selected { border: 3px solid #ff6ec7; }
+.dashboard-card .icon { font-size: 40px; margin-bottom: 12px; }
+.dashboard-card .name { font-size: 1.2rem; font-weight: 600; }
+.dashboard-card .price { margin-top: 8px; font-weight: bold; color: #ff6ec7; }
 
 /* Selected templates display */
 .selected-templates {
@@ -93,28 +83,23 @@ body.dark-theme {
     font-size: 1.2rem;
     font-weight: 600;
 }
-.selected-templates span {
-    margin-right: 12px;
-}
+.selected-templates span { margin-right: 12px; }
 
-/* Message card */
+/* Message box */
 .message-card {
-    background: #1a1a28;
+    background: #ffffff;
     border-radius: 12px;
     padding: 16px;
     margin-top: 30px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
 }
 .message-card textarea {
     width: 100%;
     min-height: 100px;
-    background: inherit;
-    color: inherit;
-    border: 1px solid #333;
     border-radius: 8px;
+    border: 1px solid #ccc;
     padding: 10px;
-}
-.message-card button {
-    margin-top: 12px;
+    font-size: 1rem;
 }
 
 /* Voice controls */
@@ -122,14 +107,14 @@ body.dark-theme {
     display: flex;
     gap: 12px;
     margin-top: 12px;
-    align-items: center;
+    flex-wrap: wrap;
 }
 .voice-controls button {
     padding: 6px 12px;
     border-radius: 6px;
     border: none;
     cursor: pointer;
-    background: #ff4d4d;
+    background: #ff6ec7;
     color: white;
 }
 
@@ -137,7 +122,7 @@ body.dark-theme {
 footer {
     text-align: center;
     padding: 20px;
-    color: #aaa;
+    color: #555;
 }
 
 /* Notification badge */
@@ -244,6 +229,35 @@ const messageBox = document.getElementById("messageBox");
 const sendBtn = document.getElementById("sendBtn");
 const status = document.getElementById("status");
 
+let audioBlob, mediaRecorder, audioChunks = [];
+const recordBtn = document.getElementById("recordBtn");
+const stopBtn = document.getElementById("stopBtn");
+const playBtn = document.getElementById("playBtn");
+const deleteBtn = document.getElementById("deleteBtn");
+
+/* Voice Recording */
+recordBtn.onclick = async () => {
+  if(!navigator.mediaDevices?.getUserMedia){ alert("Recording not supported"); return; }
+  const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+  mediaRecorder = new MediaRecorder(stream);
+  audioChunks = [];
+  mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+  mediaRecorder.start();
+  recordBtn.disabled = true; stopBtn.disabled = false;
+};
+
+stopBtn.onclick = () => {
+  mediaRecorder.stop();
+  mediaRecorder.onstop = () => {
+    audioBlob = new Blob(audioChunks, { type:"audio/webm" });
+    playBtn.disabled = false; deleteBtn.disabled = false;
+  };
+  recordBtn.disabled = false; stopBtn.disabled = true;
+};
+
+playBtn.onclick = () => { if(audioBlob) new Audio(URL.createObjectURL(audioBlob)).play(); };
+deleteBtn.onclick = () => { audioBlob = null; playBtn.disabled = true; deleteBtn.disabled = true; };
+
 sendBtn.onclick = () => {
   if(selected.length === 0) return alert("Select at least one template");
   if(!messageBox.value.trim()) return alert("Write a message");
@@ -266,16 +280,14 @@ sendBtn.onclick = () => {
   selected = [];
   currentTemplates.textContent = "None";
   document.querySelectorAll(".dashboard-card.selected").forEach(e=>e.classList.remove("selected"));
-  audioBlob = null;
-  stopBtn.disabled = true; playBtn.disabled = true; deleteBtn.disabled = true;
+  audioBlob = null; stopBtn.disabled = true; playBtn.disabled = true; deleteBtn.disabled = true;
 
-  status.style.display = "block";
-  status.textContent = "Message sent to inbox";
+  status.style.display = "block"; status.textContent = "Message sent to inbox";
   setTimeout(()=>status.style.display="none",2000);
   updateBadge();
 };
 
-/* ---------------- NOTIFICATION BADGE ---------------- */
+/* ---------------- NOTIFICATION ---------------- */
 function updateBadge(){
   const inbox = getInbox();
   const unread = inbox.filter(m=>m.userEmail===user.email && !m.replyRead && m.adminReply).length;
@@ -283,46 +295,6 @@ function updateBadge(){
   inboxBadge.textContent = unread;
 }
 updateBadge();
-
-/* ---------------- VOICE RECORDING ---------------- */
-let mediaRecorder, audioChunks = [], audioBlob;
-const recordBtn = document.getElementById("recordBtn");
-const stopBtn = document.getElementById("stopBtn");
-const playBtn = document.getElementById("playBtn");
-const deleteBtn = document.getElementById("deleteBtn");
-
-recordBtn.onclick = async () => {
-  if(!navigator.mediaDevices?.getUserMedia){ alert("Recording not supported"); return; }
-  const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-  mediaRecorder = new MediaRecorder(stream);
-  audioChunks = [];
-  mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-  mediaRecorder.start();
-  recordBtn.disabled = true; stopBtn.disabled = false;
-};
-
-stopBtn.onclick = () => {
-  mediaRecorder.stop();
-  mediaRecorder.onstop = () => {
-    audioBlob = new Blob(audioChunks, { type:"audio/webm" });
-    const url = URL.createObjectURL(audioBlob);
-    playBtn.disabled = false; deleteBtn.disabled = false;
-  };
-  recordBtn.disabled = false; stopBtn.disabled = true;
-};
-
-playBtn.onclick = () => {
-  if(audioBlob){
-    const url = URL.createObjectURL(audioBlob);
-    const audio = new Audio(url);
-    audio.play();
-  }
-};
-
-deleteBtn.onclick = () => {
-  audioBlob = null;
-  playBtn.disabled = true; deleteBtn.disabled = true;
-};
 
 /* ---------------- LOGOUT ---------------- */
 document.getElementById("logoutBtn").onclick = () => {
@@ -332,8 +304,7 @@ document.getElementById("logoutBtn").onclick = () => {
 
 /* ---------------- THEME TOGGLE ---------------- */
 const themeToggle = document.getElementById("theme-toggle");
-if(localStorage.getItem("theme")==="dark") document.body.classList.add("dark-theme");
-themeToggle.textContent = document.body.classList.contains("dark-theme") ? "☀️" : "🌙";
+themeToggle.textContent = "🌙"; // light mode default
 themeToggle.onclick = () => {
   document.body.classList.toggle("dark-theme");
   themeToggle.textContent = document.body.classList.contains("dark-theme") ? "☀️" : "🌙";
