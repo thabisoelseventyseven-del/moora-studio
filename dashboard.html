@@ -2,32 +2,153 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Dashboard - Moora Studio</title>
 <link rel="stylesheet" href="style.css">
 <style>
-body{font-family:Arial;background:#f5f5f5;color:#111;margin:0;transition:background 0.3s,color 0.3s;}
-body.dark-theme{background:#0f0f15;color:#eee;}
-.top-left-nav{display:flex;gap:12px;padding:12px 20px;align-items:center;flex-wrap:wrap;}
-.btn{background:linear-gradient(135deg,#50e3c2,#ff6ec7);color:#fff;padding:10px 16px;border-radius:10px;border:none;cursor:pointer;}
-.btn.small-btn{font-size:.9rem;}
-.header{text-align:center;padding:40px 10px;}
-.header h1{font-size:3rem;margin:0;}
-.header p{font-size:1.1rem;color:#666;margin-top:6px;}
-.dashboard-container{max-width:1200px;margin:auto;padding:20px;}
-.dashboard-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;justify-items:center;}
-.dashboard-card{background:#1c1c27;border-radius:16px;padding:25px;text-align:center;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;width:100%;box-sizing:border-box;}
-.dashboard-card:hover{transform:scale(1.05);box-shadow:0 8px 20px rgba(0,0,0,0.3);}
-.dashboard-card.selected{border:3px solid #ff6ec7;}
-.dashboard-card div.icon{font-size:48px;margin-bottom:12px;}
-.template-price{color:#ffd6f0;margin-top:12px;font-weight:bold;font-size:1.1rem;}
-.message-card{background:#fff;padding:25px;border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,0.15);margin-top:30px;}
-body.dark-theme .message-card{background:#1c1c27;color:#eee;}
-textarea{width:100%;min-height:140px;padding:14px;border-radius:12px;border:1px solid #ccc;background:#f5f5f5;color:#111;resize:vertical;font-size:1rem;}
-body.dark-theme textarea{background:#0f0f15;color:#eee;border:1px solid #333;}
-#currentTemplates{font-size:1.3rem;font-weight:700;margin-top:16px;display:block;}
-.status-msg{color:#50e3c2;margin-top:12px;display:none;font-weight:600;}
-.badge{background:#ff6ec7;border-radius:999px;padding:2px 8px;font-size:.9rem;display:none;margin-left:6px;}
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5; /* light mode by default */
+    color: #111;
+    margin: 0;
+    transition: background 0.3s, color 0.3s;
+}
+body.dark-theme {
+    background: #0f0f15;
+    color: #eee;
+}
+
+/* Top navigation */
+.top-left-nav {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 12px 20px;
+}
+.btn {
+    background: linear-gradient(135deg,#50e3c2,#ff6ec7);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+}
+.small-btn { font-size: 0.9rem; }
+
+/* Header */
+.header {
+    text-align: center;
+    padding: 40px 20px 20px;
+}
+.header h1 {
+    font-size: 2.5rem;
+    margin: 0 0 8px;
+}
+
+/* Dashboard container */
+.dashboard-container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* Template section */
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+.dashboard-card {
+    background: #1c1c27;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, border 0.2s;
+}
+.dashboard-card:hover { transform: translateY(-4px); }
+.dashboard-card.selected {
+    border: 3px solid #ff6ec7;
+}
+.dashboard-card .icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+}
+.dashboard-card .name {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+.dashboard-card .price {
+    margin-top: 8px;
+    font-weight: bold;
+    color: #ffd6f0;
+}
+
+/* Selected templates display */
+.selected-templates {
+    margin-top: 16px;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+.selected-templates span {
+    margin-right: 12px;
+}
+
+/* Message card */
+.message-card {
+    background: #1a1a28;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 30px;
+}
+.message-card textarea {
+    width: 100%;
+    min-height: 100px;
+    background: inherit;
+    color: inherit;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px;
+}
+.message-card button {
+    margin-top: 12px;
+}
+
+/* Voice controls */
+.voice-controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    align-items: center;
+}
+.voice-controls button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    background: #ff4d4d;
+    color: white;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 20px;
+    color: #aaa;
+}
+
+/* Notification badge */
+.badge {
+    background: #ff6ec7;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 0.8rem;
+    display: none;
+    vertical-align: super;
+}
 </style>
 </head>
 
@@ -38,135 +159,187 @@ body.dark-theme textarea{background:#0f0f15;color:#eee;border:1px solid #333;}
   <a class="btn small-btn" href="inbox.html">
     Inbox <span id="inboxBadge" class="badge">0</span>
   </a>
-  <button id="themeToggle" class="btn small-btn">🌙</button>
-  <button id="logoutBtn" class="btn small-btn" style="margin-left:8px;">Logout</button>
+  <button id="theme-toggle" class="btn small-btn">🌙</button>
+  <button id="logoutBtn" class="btn small-btn">Logout</button>
 </div>
 
 <header class="header">
   <h1>Welcome, <span id="userName"></span></h1>
-  <p>Select templates and send messages to admin</p>
 </header>
 
 <main class="dashboard-container">
 
 <section>
-  <h2 style="text-align:center">Choose Templates</h2>
-  <div id="templatesContainer" class="dashboard-cards"></div>
-  <p><strong>Selected:</strong> <span id="currentTemplates">None</span></p>
+<h2>Choose Templates</h2>
+<div id="templatesContainer" class="dashboard-cards"></div>
+<p class="selected-templates"><strong>Selected:</strong> <span id="currentTemplates">None</span></p>
 </section>
 
-<section>
-  <h2 style="text-align:center">Your Message</h2>
-  <div class="message-card">
-    <textarea id="messageBox" placeholder="Write your message here..."></textarea>
-    <button id="sendBtn" class="btn" style="margin-top:16px;">Send to Admin</button>
-    <p id="status" class="status-msg">Message sent to admin</p>
-  </div>
+<section class="message-card">
+<h2>Your Message</h2>
+<textarea id="messageBox" placeholder="Write your message here..."></textarea>
+
+<div class="voice-controls">
+    <button id="recordBtn">🎤 Record</button>
+    <button id="stopBtn" disabled>⏹ Stop</button>
+    <button id="playBtn" disabled>▶️ Play</button>
+    <button id="deleteBtn" disabled>🗑 Delete</button>
+</div>
+
+<button id="sendBtn" class="btn">Send to Admin</button>
+<p id="status" style="color:#50e3c2;display:none;margin-top:8px"></p>
 </section>
 
 </main>
 
+<footer>© 2025 Moora Studio</footer>
+
 <script>
-// ---------- Theme ----------
-const themeToggle=document.getElementById('themeToggle');
-if(!localStorage.getItem('theme')) localStorage.setItem('theme','light');
-if(localStorage.getItem('theme')==='dark'){document.body.classList.add('dark-theme'); themeToggle.textContent='☀️';}
-else{document.body.classList.remove('dark-theme'); themeToggle.textContent='🌙';}
-themeToggle.addEventListener('click',()=>{
-  document.body.classList.toggle('dark-theme');
-  themeToggle.textContent=document.body.classList.contains('dark-theme')?'☀️':'🌙';
-  localStorage.setItem('theme',document.body.classList.contains('dark-theme')?'dark':'light');
-});
+/* ---------------- USER ---------------- */
+let user = JSON.parse(sessionStorage.getItem("user"));
+if(!user){
+  user = { name: "Demo User", email: "demo@example.com" };
+  sessionStorage.setItem("user", JSON.stringify(user));
+}
+userName.textContent = user.name;
 
-// ---------- User ----------
-let user=JSON.parse(sessionStorage.getItem("user"));
-if(!user){user={name:"Demo User",email:"demo@example.com"}; sessionStorage.setItem("user",JSON.stringify(user));}
-document.getElementById('userName').textContent=user.name;
+/* ---------------- STORAGE ---------------- */
+const getInbox = () => JSON.parse(localStorage.getItem("inbox") || "[]");
+const setInbox = d => localStorage.setItem("inbox", JSON.stringify(d));
 
-// ---------- Templates ----------
-const templates=[
+/* ---------------- TEMPLATES ---------------- */
+const templates = [
   {name:"Business",price:"R250",icon:"💼"},
   {name:"Portfolio",price:"R200",icon:"🎨"},
   {name:"Landing Page",price:"R300",icon:"🌐"},
   {name:"Marketing",price:"R180",icon:"📣"},
   {name:"CV",price:"R100",icon:"📝"},
-  {name:"Report Templates",price:"R220",icon:"📊"},
-  {name:"Analytics Dashboard",price:"R350",icon:"📈"},
-  {name:"E-commerce",price:"R400",icon:"🛒"}
+  {name:"Report",price:"R220",icon:"📊"},
+  {name:"Blog",price:"R200",icon:"🖊️"},
+  {name:"E-Commerce",price:"R350",icon:"🛒"}
 ];
-let selected=[];
-const templatesContainer=document.getElementById('templatesContainer');
-const currentTemplates=document.getElementById('currentTemplates');
 
-templates.forEach(t=>{
-  const card=document.createElement('div');
-  card.className='dashboard-card';
-  card.innerHTML=`<div class="icon">${t.icon}</div><b>${t.name}</b><div class="template-price">${t.price}</div>`;
-  card.onclick=()=>{
-    if(!selected.includes(t.name)){
-      selected.push(t.name);
-      card.classList.add('selected');
-      updateSelectedDisplay();
+let selected = [];
+const templatesContainer = document.getElementById("templatesContainer");
+templates.forEach(t => {
+  const div = document.createElement("div");
+  div.className = "dashboard-card";
+  div.innerHTML = `<div class="icon">${t.icon}</div><div class="name">${t.name}</div><div class="price">${t.price}</div>`;
+  div.onclick = () => {
+    if(!selected.includes(t)){
+      selected.push(t);
+      div.classList.add("selected");
+    } else {
+      selected = selected.filter(s => s !== t);
+      div.classList.remove("selected");
     }
+    const display = selected.map(s => `${s.icon} ${s.name}`).join(" | ") || "None";
+    currentTemplates.textContent = display;
   };
-  templatesContainer.appendChild(card);
+  templatesContainer.appendChild(div);
 });
 
-function updateSelectedDisplay(){
-  if(selected.length===0){currentTemplates.textContent="None";}
-  else{
-    currentTemplates.innerHTML=selected.map(name=>{
-      const t=templates.find(x=>x.name===name);
-      return `${t.icon} ${t.name}`;
-    }).join(" | ");
-  }
-}
+/* ---------------- MESSAGE SENDING ---------------- */
+const messageBox = document.getElementById("messageBox");
+const sendBtn = document.getElementById("sendBtn");
+const status = document.getElementById("status");
 
-// ---------- Message Send ----------
-const sendBtn=document.getElementById('sendBtn');
-const messageBox=document.getElementById('messageBox');
-const status=document.getElementById('status');
-sendBtn.onclick=()=>{
-  if(!selected.length){return alert("Select at least one template");}
-  if(!messageBox.value.trim()){return alert("Write a message");}
+sendBtn.onclick = () => {
+  if(selected.length === 0) return alert("Select at least one template");
+  if(!messageBox.value.trim()) return alert("Write a message");
 
-  const inbox=JSON.parse(localStorage.getItem("inbox")||"[]");
+  const inbox = getInbox();
   inbox.push({
-    id:"m"+Date.now(),
-    userName:user.name,
-    userEmail:user.email,
-    templates:[...selected],
-    message:messageBox.value,
-    replyText:null,
-    adminVoice:null,
-    replyRead:false,
-    sentAt:new Date().toISOString()
+    id: "m" + Date.now(),
+    userName: user.name,
+    userEmail: user.email,
+    templates: [...selected],
+    userMessage: messageBox.value,
+    userVoice: audioBlob ? audioBlob : null,
+    adminReply: null,
+    replyRead: false,
+    sentAt: new Date().toISOString()
   });
-  localStorage.setItem("inbox",JSON.stringify(inbox));
+  setInbox(inbox);
 
-  messageBox.value=""; selected=[]; updateSelectedDisplay();
+  messageBox.value = "";
+  selected = [];
+  currentTemplates.textContent = "None";
   document.querySelectorAll(".dashboard-card.selected").forEach(e=>e.classList.remove("selected"));
-  status.style.display="block";
-  setTimeout(()=>status.style.display="none",2000);
+  audioBlob = null;
+  stopBtn.disabled = true; playBtn.disabled = true; deleteBtn.disabled = true;
 
+  status.style.display = "block";
+  status.textContent = "Message sent to inbox";
+  setTimeout(()=>status.style.display="none",2000);
   updateBadge();
 };
 
-// ---------- Inbox Notification Badge ----------
+/* ---------------- NOTIFICATION BADGE ---------------- */
 function updateBadge(){
-  const inbox=JSON.parse(localStorage.getItem("inbox")||"[]");
-  const unread=inbox.filter(m=>m.userEmail===user.email&&(m.replyText||m.adminVoice)&&!m.replyRead).length;
-  const badge=document.getElementById("inboxBadge");
-  badge.style.display=unread?"inline-block":"none";
-  badge.textContent=unread;
+  const inbox = getInbox();
+  const unread = inbox.filter(m=>m.userEmail===user.email && !m.replyRead && m.adminReply).length;
+  inboxBadge.style.display = unread ? "inline-block" : "none";
+  inboxBadge.textContent = unread;
 }
 updateBadge();
 
-// ---------- Logout ----------
-document.getElementById('logoutBtn').onclick=()=>{
-  sessionStorage.removeItem('user');
-  location.href="login.html";
+/* ---------------- VOICE RECORDING ---------------- */
+let mediaRecorder, audioChunks = [], audioBlob;
+const recordBtn = document.getElementById("recordBtn");
+const stopBtn = document.getElementById("stopBtn");
+const playBtn = document.getElementById("playBtn");
+const deleteBtn = document.getElementById("deleteBtn");
+
+recordBtn.onclick = async () => {
+  if(!navigator.mediaDevices?.getUserMedia){ alert("Recording not supported"); return; }
+  const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+  mediaRecorder = new MediaRecorder(stream);
+  audioChunks = [];
+  mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+  mediaRecorder.start();
+  recordBtn.disabled = true; stopBtn.disabled = false;
+};
+
+stopBtn.onclick = () => {
+  mediaRecorder.stop();
+  mediaRecorder.onstop = () => {
+    audioBlob = new Blob(audioChunks, { type:"audio/webm" });
+    const url = URL.createObjectURL(audioBlob);
+    playBtn.disabled = false; deleteBtn.disabled = false;
+  };
+  recordBtn.disabled = false; stopBtn.disabled = true;
+};
+
+playBtn.onclick = () => {
+  if(audioBlob){
+    const url = URL.createObjectURL(audioBlob);
+    const audio = new Audio(url);
+    audio.play();
+  }
+};
+
+deleteBtn.onclick = () => {
+  audioBlob = null;
+  playBtn.disabled = true; deleteBtn.disabled = true;
+};
+
+/* ---------------- LOGOUT ---------------- */
+document.getElementById("logoutBtn").onclick = () => {
+  sessionStorage.removeItem("user");
+  location.href = "login.html";
+};
+
+/* ---------------- THEME TOGGLE ---------------- */
+const themeToggle = document.getElementById("theme-toggle");
+if(localStorage.getItem("theme")==="dark") document.body.classList.add("dark-theme");
+themeToggle.textContent = document.body.classList.contains("dark-theme") ? "☀️" : "🌙";
+themeToggle.onclick = () => {
+  document.body.classList.toggle("dark-theme");
+  themeToggle.textContent = document.body.classList.contains("dark-theme") ? "☀️" : "🌙";
+  localStorage.setItem("theme", document.body.classList.contains("dark-theme") ? "dark" : "light");
 };
 </script>
+
 </body>
 </html>
