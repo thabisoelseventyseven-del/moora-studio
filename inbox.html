@@ -6,74 +6,134 @@
 <title>Inbox - Moora Studio</title>
 <link rel="stylesheet" href="style.css">
 <style>
-body{background:#0f0f15;color:#eee;font-family:Arial;margin:0;padding:0}
-.top-left-nav{display:flex;gap:12px;padding:12px 20px;align-items:center}
-.btn{background:linear-gradient(135deg,#50e3c2,#ff6ec7);color:#fff;padding:8px 12px;border-radius:8px;border:none;cursor:pointer;text-decoration:none}
-.small-btn{font-size:.9rem;}
-.header{text-align:center;padding:18px;}
-.inbox-container{max-width:900px;margin:30px auto;padding:20px}
-.card{background:#1c1c27;border-radius:12px;padding:14px;margin-bottom:12px;color:#fff}
-.card audio{width:100%;margin-top:8px}
-.card small{color:#c9c9c9;display:block;margin-top:6px}
-.empty{text-align:center;color:#c9c9c9;padding:36px;background:#0f1013;border-radius:10px}
+body {
+    font-family: Arial;
+    margin:0;
+    background: #f5f5f5; /* Light mode default */
+    color: #222;
+    transition: background 0.3s, color 0.3s;
+}
+body.dark-theme {
+    background: #0f0f15;
+    color: #eee;
+}
+.top-left-nav {
+    display:flex;
+    gap:12px;
+    padding:12px 20px;
+    align-items:center;
+    background: inherit;
+}
+.btn {
+    background: linear-gradient(135deg,#50e3c2,#ff6ec7);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: bold;
+}
+.small-btn { font-size:0.9rem; }
+
+.header {
+    text-align:center;
+    padding:30px 10px;
+}
+.header h1 { font-size:2.2rem; margin-bottom:6px; }
+.header p { font-size:1rem; color:#888; }
+
+.inbox-container {
+    max-width: 900px;
+    margin: 0 auto 60px;
+    padding: 0 20px;
+}
+
+.inbox-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    color: #222;
+}
+body.dark-theme .inbox-card {
+    background: #1c1c27;
+    color: #fff;
+}
+.inbox-card b { font-size:1.1rem; }
+.inbox-card p { margin:6px 0; }
+.inbox-card small { color:#888; display:block; margin-top:8px; }
+.inbox-card audio { width:100%; margin-top:10px; }
+
+.empty { text-align:center; color:#c9c9c9; padding:36px; background:#0f1013; border-radius:10px; }
+
+footer {
+    text-align:center;
+    padding:30px;
+    color:#555;
+}
 </style>
 </head>
-
 <body>
 
 <div class="top-left-nav">
   <a href="dashboard.html" class="btn small-btn">Dashboard</a>
-  <button id="themeToggle" class="btn small-btn">☀️</button>
+  <button id="themeToggle" class="btn small-btn">🌙</button>
 </div>
 
 <header class="header">
-  <h2>Inbox</h2>
-  <p class="tagline">Admin replies for your messages</p>
+  <h1>Inbox</h1>
+  <p>View admin replies to your messages</p>
 </header>
 
 <section class="inbox-container" id="inboxContainer"></section>
 
+<footer>
+    <p>© 2025 Moora Studio — contact: thabisoelseventyseven@gmail.com</p>
+</footer>
+
 <script>
-// Theme toggle
+// ----------------- THEME -----------------
 const themeToggle = document.getElementById("themeToggle");
-const savedTheme = localStorage.getItem("theme") || "dark";
-if(savedTheme==="light"){ document.body.classList.add("light-theme"); themeToggle.textContent="🌙"; } 
-else themeToggle.textContent="☀️";
+const savedTheme = localStorage.getItem("theme") || "light";
+if(savedTheme==="dark"){ document.body.classList.add("dark-theme"); themeToggle.textContent="☀️"; } 
+else themeToggle.textContent="🌙";
 
 themeToggle.addEventListener("click", ()=>{
-    document.body.classList.toggle("light-theme");
-    if(document.body.classList.contains("light-theme")){
-        themeToggle.textContent="🌙"; localStorage.setItem("theme","light");
+    document.body.classList.toggle("dark-theme");
+    if(document.body.classList.contains("dark-theme")){
+        themeToggle.textContent="☀️";
+        localStorage.setItem("theme","dark");
     } else {
-        themeToggle.textContent="☀️"; localStorage.setItem("theme","dark");
+        themeToggle.textContent="🌙";
+        localStorage.setItem("theme","light");
     }
 });
 
-// User check
+// ----------------- USER CHECK -----------------
 const user = JSON.parse(sessionStorage.getItem("user"));
 if(!user) location.href="login.html";
 
-// Inbox rendering
+// ----------------- INBOX -----------------
 const inboxContainer = document.getElementById("inboxContainer");
 
 function renderInbox(){
     const inbox = JSON.parse(localStorage.getItem("inbox")||"[]");
+    // Only show admin replies
     const replies = inbox.filter(m=>m.userEmail===user.email && (m.adminReply || m.adminVoice));
+    inboxContainer.innerHTML="";
 
-    inboxContainer.innerHTML = "";
     if(replies.length===0){
-        inboxContainer.innerHTML = "<div class='empty'>No admin replies yet.</div>";
+        inboxContainer.innerHTML="<div class='empty'>No admin replies yet.</div>";
         return;
     }
 
-    replies.forEach((msg,index)=>{
+    replies.forEach((msg)=>{
         const div = document.createElement("div");
-        div.className = "card";
+        div.className="inbox-card";
 
-        let audioHTML = "";
-        if(msg.adminVoice){
-            audioHTML = `<audio controls src="${msg.adminVoice}"></audio>`;
-        }
+        const audioHTML = msg.adminVoice ? `<audio controls src="${msg.adminVoice}"></audio>` : "";
 
         div.innerHTML = `
             <b>Admin Reply:</b>
@@ -81,7 +141,6 @@ function renderInbox(){
             ${audioHTML}
             <small>Templates: ${msg.templates ? msg.templates.join(" | ") : "(none)"}</small>
         `;
-
         inboxContainer.appendChild(div);
 
         // Mark as read
@@ -89,9 +148,22 @@ function renderInbox(){
     });
 
     localStorage.setItem("inbox", JSON.stringify(inbox));
+    updateBadge();
+}
+
+// ----------------- BADGE -----------------
+const inboxBadge = document.querySelector("#inboxBadge");
+function updateBadge(){
+    const inbox = JSON.parse(localStorage.getItem("inbox")||"[]");
+    const unread = inbox.filter(m=>m.userEmail===user.email && (m.adminReply || m.adminVoice) && !m.replyRead).length;
+    if(inboxBadge) {
+        inboxBadge.style.display = unread? "inline-block":"none";
+        inboxBadge.textContent = unread;
+    }
 }
 
 renderInbox();
+updateBadge();
 </script>
 
 </body>
