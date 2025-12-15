@@ -1,129 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dashboard - Moora Studio</title>
 <style>
+/* ---------------- GLOBAL ---------------- */
 body {
     font-family: Arial, sans-serif;
-    margin: 0;
+    margin:0;
     background: #f5f5f5;
     color: #111;
     transition: background 0.3s, color 0.3s;
 }
 body.dark-theme {
-    background: #0f0f15;
-    color: #eee;
+    background:#0f0f15;
+    color:#eee;
 }
 
 /* Top navigation */
 .top-left-nav {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    padding: 12px 20px;
-    flex-wrap: wrap;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+    padding:12px 20px;
 }
 .btn {
-    background: linear-gradient(135deg,#50e3c2,#ff6ec7);
-    color: #fff;
-    padding: 8px 14px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
-    text-decoration: none;
-    white-space: nowrap;
+    padding:8px 14px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    text-decoration:none;
+    background:linear-gradient(135deg,#50e3c2,#ff6ec7);
+    color:#fff;
 }
-.small-btn { font-size: 0.9rem; }
+.small-btn { font-size:0.9rem; }
 
 /* Header */
 .header {
-    text-align: center;
-    padding: 40px 20px 20px;
+    text-align:center;
+    padding:40px 20px 20px;
 }
-.header h1 {
-    font-size: 2.5rem;
-    margin: 0 0 8px;
-}
+.header h1 { font-size:2.5rem; margin:0 0 8px; }
 
-/* Dashboard container */
-.dashboard-container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 20px;
-}
-
-/* Templates grid */
+/* Templates Section */
+.dashboard-container { max-width:1200px; margin:auto; padding:20px; }
 .dashboard-cards {
-    display: grid;
+    display:grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
-    margin-top: 20px;
+    gap:16px;
+    margin-top:20px;
 }
 .dashboard-card {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    cursor: pointer;
-    border: 2px solid #ddd;
+    background:#ffffff;
+    border-radius:12px;
+    padding:20px;
+    text-align:center;
+    cursor:pointer;
+    border:2px solid #ddd;
     transition: transform 0.2s, border 0.2s;
 }
 .dashboard-card:hover { transform: translateY(-4px); }
-.dashboard-card.selected { border: 3px solid #ff6ec7; }
-.dashboard-card .icon { font-size: 40px; margin-bottom: 12px; }
-.dashboard-card .name { font-size: 1.2rem; font-weight: 600; }
-.dashboard-card .price { margin-top: 8px; font-weight: bold; color: #ff6ec7; }
+.dashboard-card.selected { border:3px solid #ff6ec7; }
+.dashboard-card .icon { font-size:40px; margin-bottom:12px; }
+.dashboard-card .name { font-size:1.2rem; font-weight:600; }
+.dashboard-card .price { margin-top:8px; font-weight:bold; color:#ff6ec7; }
 
 /* Selected templates display */
-.selected-templates {
-    margin-top: 16px;
-    font-size: 1.2rem;
-    font-weight: 600;
-}
-.selected-templates span { margin-right: 12px; }
+.selected-templates { margin-top:16px; font-size:1.2rem; font-weight:600; }
+.selected-templates span { margin-right:12px; }
 
-/* Message box */
+/* Message Box */
 .message-card {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 16px;
-    margin-top: 30px;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    background:#ffffff;
+    border-radius:12px;
+    padding:16px;
+    margin-top:30px;
+    box-shadow:0 3px 8px rgba(0,0,0,0.15);
 }
 .message-card textarea {
-    width: 100%;
-    min-height: 100px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    padding: 10px;
-    font-size: 1rem;
+    width:100%;
+    min-height:100px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    padding:10px;
+    font-size:1rem;
 }
 
 /* Voice controls */
 .voice-controls {
-    display: flex;
-    gap: 12px;
-    margin-top: 12px;
-    flex-wrap: wrap;
+    display:flex;
+    gap:12px;
+    margin-top:12px;
+    flex-wrap:wrap;
 }
 .voice-controls button {
-    padding: 6px 12px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    background: #ff6ec7;
-    color: white;
+    padding:6px 12px;
+    border-radius:6px;
+    border:none;
+    cursor:pointer;
+    background:#ff6ec7;
+    color:white;
 }
 
 /* Footer */
-footer {
-    text-align: center;
-    padding: 20px;
-    color: #555;
-}
+footer { text-align:center; padding:20px; color:#555; }
 
 /* Notification badge */
 .badge {
@@ -136,7 +119,6 @@ footer {
 }
 </style>
 </head>
-
 <body>
 
 <div class="top-left-nav">
@@ -154,23 +136,23 @@ footer {
 
 <main class="dashboard-container">
 
+<!-- Templates Section -->
 <section>
 <h2>Choose Templates</h2>
 <div id="templatesContainer" class="dashboard-cards"></div>
 <p class="selected-templates"><strong>Selected:</strong> <span id="currentTemplates">None</span></p>
 </section>
 
+<!-- Message Section -->
 <section class="message-card">
 <h2>Your Message</h2>
 <textarea id="messageBox" placeholder="Write your message here..."></textarea>
-
 <div class="voice-controls">
     <button id="recordBtn">🎤 Record</button>
     <button id="stopBtn" disabled>⏹ Stop</button>
     <button id="playBtn" disabled>▶️ Play</button>
     <button id="deleteBtn" disabled>🗑 Delete</button>
 </div>
-
 <button id="sendBtn" class="btn">Send to Admin</button>
 <p id="status" style="color:#50e3c2;display:none;margin-top:8px"></p>
 </section>
@@ -181,11 +163,7 @@ footer {
 
 <script>
 /* ---------------- USER ---------------- */
-let user = JSON.parse(sessionStorage.getItem("user"));
-if(!user){
-  user = { name: "Demo User", email: "demo@example.com" };
-  sessionStorage.setItem("user", JSON.stringify(user));
-}
+let user = JSON.parse(sessionStorage.getItem("user")) || { name: "Demo User", email: "demo@example.com" };
 userName.textContent = user.name;
 
 /* ---------------- STORAGE ---------------- */
@@ -199,9 +177,9 @@ const templates = [
   {name:"Landing Page",price:"R300",icon:"🌐"},
   {name:"Marketing",price:"R180",icon:"📣"},
   {name:"CV",price:"R100",icon:"📝"},
-  {name:"Report",price:"R220",icon:"📊"},
-  {name:"Blog",price:"R200",icon:"🖊️"},
-  {name:"E-Commerce",price:"R350",icon:"🛒"}
+  {name:"University Apps",price:"R150",icon:"🎓"},
+  {name:"Report",price:"R120",icon:"📊"},
+  {name:"Web Templates",price:"R350",icon:"💻"}
 ];
 
 let selected = [];
@@ -211,15 +189,9 @@ templates.forEach(t => {
   div.className = "dashboard-card";
   div.innerHTML = `<div class="icon">${t.icon}</div><div class="name">${t.name}</div><div class="price">${t.price}</div>`;
   div.onclick = () => {
-    if(!selected.includes(t)){
-      selected.push(t);
-      div.classList.add("selected");
-    } else {
-      selected = selected.filter(s => s !== t);
-      div.classList.remove("selected");
-    }
-    const display = selected.map(s => `${s.icon} ${s.name}`).join(" | ") || "None";
-    currentTemplates.textContent = display;
+    if(!selected.includes(t)){ selected.push(t); div.classList.add("selected"); }
+    else { selected = selected.filter(s=>s!==t); div.classList.remove("selected"); }
+    currentTemplates.textContent = selected.map(s=>`${s.icon} ${s.name}`).join(" | ") || "None";
   };
   templatesContainer.appendChild(div);
 });
@@ -229,18 +201,16 @@ const messageBox = document.getElementById("messageBox");
 const sendBtn = document.getElementById("sendBtn");
 const status = document.getElementById("status");
 
-let audioBlob, mediaRecorder, audioChunks = [];
+let audioBlob, mediaRecorder, audioChunks=[];
 const recordBtn = document.getElementById("recordBtn");
 const stopBtn = document.getElementById("stopBtn");
 const playBtn = document.getElementById("playBtn");
 const deleteBtn = document.getElementById("deleteBtn");
 
-/* Voice Recording */
 recordBtn.onclick = async () => {
-  if(!navigator.mediaDevices?.getUserMedia){ alert("Recording not supported"); return; }
   const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
   mediaRecorder = new MediaRecorder(stream);
-  audioChunks = [];
+  audioChunks=[];
   mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
   mediaRecorder.start();
   recordBtn.disabled = true; stopBtn.disabled = false;
@@ -248,46 +218,43 @@ recordBtn.onclick = async () => {
 
 stopBtn.onclick = () => {
   mediaRecorder.stop();
-  mediaRecorder.onstop = () => {
-    audioBlob = new Blob(audioChunks, { type:"audio/webm" });
-    playBtn.disabled = false; deleteBtn.disabled = false;
-  };
-  recordBtn.disabled = false; stopBtn.disabled = true;
+  mediaRecorder.onstop = () => { audioBlob = new Blob(audioChunks,{type:"audio/webm"}); playBtn.disabled=false; deleteBtn.disabled=false; };
+  recordBtn.disabled=false; stopBtn.disabled=true;
 };
-
 playBtn.onclick = () => { if(audioBlob) new Audio(URL.createObjectURL(audioBlob)).play(); };
-deleteBtn.onclick = () => { audioBlob = null; playBtn.disabled = true; deleteBtn.disabled = true; };
+deleteBtn.onclick = () => { audioBlob=null; playBtn.disabled=true; deleteBtn.disabled=true; };
 
 sendBtn.onclick = () => {
-  if(selected.length === 0) return alert("Select at least one template");
+  if(selected.length===0) return alert("Select at least one template");
   if(!messageBox.value.trim()) return alert("Write a message");
 
   const inbox = getInbox();
   inbox.push({
-    id: "m" + Date.now(),
-    userName: user.name,
-    userEmail: user.email,
-    templates: [...selected],
-    userMessage: messageBox.value,
-    userVoice: audioBlob ? audioBlob : null,
-    adminReply: null,
-    replyRead: false,
-    sentAt: new Date().toISOString()
+    id:"m"+Date.now(),
+    userName:user.name,
+    userEmail:user.email,
+    templates:[...selected],
+    userMessage:messageBox.value,
+    userVoice:audioBlob || null,
+    adminReply:null,
+    replyRead:false,
+    sentAt:new Date().toISOString()
   });
   setInbox(inbox);
 
-  messageBox.value = "";
-  selected = [];
-  currentTemplates.textContent = "None";
+  messageBox.value="";
+  selected=[];
+  currentTemplates.textContent="None";
   document.querySelectorAll(".dashboard-card.selected").forEach(e=>e.classList.remove("selected"));
-  audioBlob = null; stopBtn.disabled = true; playBtn.disabled = true; deleteBtn.disabled = true;
+  audioBlob=null; stopBtn.disabled=true; playBtn.disabled=true; deleteBtn.disabled=true;
 
-  status.style.display = "block"; status.textContent = "Message sent to inbox";
+  status.style.display="block"; status.textContent="Message sent to inbox";
   setTimeout(()=>status.style.display="none",2000);
   updateBadge();
 };
 
 /* ---------------- NOTIFICATION ---------------- */
+const inboxBadge = document.getElementById("inboxBadge");
 function updateBadge(){
   const inbox = getInbox();
   const unread = inbox.filter(m=>m.userEmail===user.email && !m.replyRead && m.adminReply).length;
@@ -297,20 +264,16 @@ function updateBadge(){
 updateBadge();
 
 /* ---------------- LOGOUT ---------------- */
-document.getElementById("logoutBtn").onclick = () => {
-  sessionStorage.removeItem("user");
-  location.href = "login.html";
-};
+document.getElementById("logoutBtn").onclick = () => { sessionStorage.removeItem("user"); location.href="login.html"; };
 
 /* ---------------- THEME TOGGLE ---------------- */
 const themeToggle = document.getElementById("theme-toggle");
-themeToggle.textContent = "🌙"; // light mode default
+themeToggle.textContent="🌙"; // light default
 themeToggle.onclick = () => {
   document.body.classList.toggle("dark-theme");
-  themeToggle.textContent = document.body.classList.contains("dark-theme") ? "☀️" : "🌙";
-  localStorage.setItem("theme", document.body.classList.contains("dark-theme") ? "dark" : "light");
+  themeToggle.textContent = document.body.classList.contains("dark-theme") ? "☀️":"🌙";
+  localStorage.setItem("theme",document.body.classList.contains("dark-theme")?"dark":"light");
 };
 </script>
-
 </body>
 </html>
