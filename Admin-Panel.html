@@ -1,73 +1,252 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Admin Dashboard - Moora Studio</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Admin Panel - Moora Studio</title>
 <link rel="stylesheet" href="style.css">
 <style>
-body{margin:0;font-family:Arial;background:#f5f5f5;color:#111; transition: all 0.3s;}
-body.dark-theme{background:#0f0f15;color:#eee;}
+body { font-family: Arial, sans-serif; background:#f5f5f5; color:#111; margin:0; transition: background 0.3s, color 0.3s;}
+body.dark-theme { background:#0f0f15; color:#eee; }
 
-.top-left-nav{display:flex;justify-content:flex-end;gap:10px;padding:16px 20px;background:inherit;position:sticky;top:0;z-index:1000;}
-.btn{padding:10px 18px;border:none;border-radius:10px;cursor:pointer;font-weight:600;background:linear-gradient(135deg,#50e3c2,#ff6ec7);color:#fff;}
-.btn.small-btn{font-size:0.9rem;}
+/* Top Nav */
+.controls {
+  display:flex; gap:12px; padding:12px 20px; align-items:center; justify-content:flex-end;
+}
+.btn {
+  background:linear-gradient(135deg,#50e3c2,#ff6ec7); color:#fff; padding:8px 14px; border-radius:8px; border:none; cursor:pointer;
+}
+.btn.logout { background:#666; }
+.btn.delete { background:#ff4d4d; }
 
-.dashboard-header{text-align:center;padding:40px 20px 20px;}
-.dashboard-header h1{font-size:2.4rem;margin-bottom:4px;}
-.dashboard-header p{font-size:1rem;color:#666;}
+/* Header */
+.header { text-align:center; padding:24px 10px; }
+.header h1 { font-size:2rem; margin:0; }
+.header p { font-size:1.05rem; color:#666; }
 
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-top:30px;}
-.admin-card{background:#fff;padding:20px;border-radius:14px;box-shadow:0 5px 12px rgba(0,0,0,0.15);}
-body.dark-theme .admin-card{background:#1c1c27;color:#eee;}
-.admin-card h2{margin:0 0 10px 0;}
-.admin-card p{margin-bottom:14px;color:#555;}
-.card-btn{padding:10px 14px;width:100%;border:none;border-radius:10px;font-weight:600;background:linear-gradient(135deg,#50e3c2,#ff6ec7);color:#fff;cursor:pointer;}
+/* Admin Container */
+.admin-container { max-width:1100px; margin:0 auto 60px; padding:0 20px; }
+
+/* Cards */
+.admin-card {
+  background:#fff; border-radius:14px; padding:18px; margin-bottom:16px; box-shadow:0 4px 12px rgba(0,0,0,0.2); transition: transform 0.2s;
+}
+body.dark-theme .admin-card { background:#1c1c27; color:#eee; }
+.admin-card:hover { transform:scale(1.02); }
+.status-pill { display:inline-block; padding:6px 12px; border-radius:999px; font-weight:700; margin-left:8px; }
+.pending { background:orange; color:black; }
+.replied { background:#66ff99; color:black; }
+
+/* Message body */
+.message-body { background:#f0f0f0; padding:12px; border-radius:8px; margin-top:10px; white-space:pre-wrap; }
+body.dark-theme .message-body { background:#0b0b11; color:#eee; }
+
+/* Reply & Voice */
+.reply-area { display:flex; gap:12px; margin-top:12px; align-items:flex-start; flex-wrap:wrap; }
+.reply-text { width:60%; min-height:80px; padding:10px; border-radius:8px; border:1px solid #ccc; }
+body.dark-theme .reply-text { background:#0f0f15; color:#eee; border:1px solid #333; }
+.voice-controls { display:flex; flex-direction:column; gap:8px; }
+.small-audio { width:250px; }
+
+/* Logged Users */
+.logged-list { margin-bottom:20px; }
+.user-block { display:flex; justify-content:space-between; align-items:center; }
+.count-badge { background:#ff6ec7; color:#fff; padding:4px 10px; border-radius:8px; font-weight:700; }
+
+/* Responsive */
+@media(max-width:720px){ .reply-area { flex-direction:column; } .reply-text { width:100%; } }
 </style>
 </head>
 <body>
 
-<div class="top-left-nav">
-  <button id="themeToggle" class="btn small-btn">🌙</button>
-  <button id="logoutBtn" class="btn small-btn">Logout</button>
+<div class="controls">
+  <button id="refreshBtn" class="btn">Refresh</button>
+  <button id="clearAllBtn" class="btn delete">Clear All Messages</button>
+  <button id="themeToggle" class="btn">🌙</button>
+  <button id="logoutAdmin" class="btn logout">Logout Admin</button>
 </div>
 
-<header class="dashboard-header">
-<h1>Admin Dashboard</h1>
-<p>Welcome to Moora Studio Admin Panel</p>
+<header class="header">
+  <h1>Admin Panel — Messages</h1>
+  <p>Reply to users via text or voice. Messages appear only in user inbox with notification.</p>
 </header>
 
-<main class="dashboard-container">
-<div class="cards-grid">
-  <div class="admin-card">
-    <h2>User Messages</h2>
-    <p>View and manage all user messages and replies.</p>
-    <button class="card-btn" onclick="location.href='admin.html'">Open Inbox</button>
-  </div>
-  <div class="admin-card">
-    <h2>User Management</h2>
-    <p>View logged-in users, remove accounts, and manage user data.</p>
-    <button class="card-btn" onclick="alert('Feature coming soon')">Manage Users</button>
-  </div>
-  <div class="admin-card">
-    <h2>System Settings</h2>
-    <p>Adjust system-wide settings and configurations.</p>
-    <button class="card-btn" onclick="alert('Feature coming soon')">Open Settings</button>
-  </div>
-</div>
+<main class="admin-container">
+  <section>
+    <h2>Logged-in Users</h2>
+    <div id="loggedUsers" class="logged-list"></div>
+  </section>
+
+  <section>
+    <h2>All User Messages</h2>
+    <div id="messagesContainer"></div>
+  </section>
 </main>
 
 <script>
-let admin = JSON.parse(sessionStorage.getItem('admin'));
-if(!admin){ admin={name:"Admin",email:"admin@moora.local"}; sessionStorage.setItem('admin',JSON.stringify(admin)); }
+// ---------- Helpers ----------
+function jsonGet(key, defaultVal){ try { return JSON.parse(localStorage.getItem(key)||'null') || defaultVal; } catch(e){ return defaultVal; } }
+function jsonSet(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
 
-/* Theme & Logout */
+// ---------- Admin session ----------
+let admin = JSON.parse(sessionStorage.getItem('admin')) || { name:"Admin", email:"admin@moora.local" };
+sessionStorage.setItem('admin', JSON.stringify(admin));
+
+// ---------- Theme ----------
 const themeToggle = document.getElementById('themeToggle');
-themeToggle.onclick = ()=>{ document.body.classList.toggle('dark-theme'); localStorage.setItem('theme', document.body.classList.contains('dark-theme')?'dark':'light'); themeToggle.textContent=document.body.classList.contains('dark-theme')?'☀️':'🌙'; }
-const savedTheme = localStorage.getItem('theme')||'light';
-if(savedTheme==='dark'){ document.body.classList.add('dark-theme'); themeToggle.textContent='☀️'; } else { themeToggle.textContent='🌙'; }
+themeToggle.addEventListener('click', ()=>{
+    document.body.classList.toggle('dark-theme');
+    themeToggle.textContent = document.body.classList.contains('dark-theme') ? '☀️' : '🌙';
+});
 
-document.getElementById('logoutBtn').onclick = ()=>{ sessionStorage.removeItem('admin'); window.location.href='login.html'; };
+// ---------- Logout ----------
+document.getElementById('logoutAdmin').addEventListener('click', ()=>{
+    sessionStorage.removeItem('admin');
+    window.location.href='login.html';
+});
+
+// ---------- Users ----------
+function renderLoggedUsers(){
+    const users = jsonGet('activeUsers', []);
+    const container = document.getElementById('loggedUsers');
+    container.innerHTML = '';
+    if(users.length===0){ container.innerHTML='<p>No users logged in.</p>'; return; }
+    users.forEach((u,i)=>{
+        const inboxCount = jsonGet('inbox',[]).filter(m=>m.userEmail===u.email).length;
+        const div = document.createElement('div');
+        div.className='admin-card';
+        div.innerHTML = `<div class="user-block">
+            <div><strong>${u.name}</strong> (${u.email}) <span class="count-badge">${inboxCount}</span></div>
+            <button class="btn delete" onclick="forceLogout(${i})">Force logout</button>
+        </div>`;
+        container.appendChild(div);
+    });
+}
+
+window.forceLogout = function(index){
+    if(!confirm('Force logout this user?')) return;
+    const users=jsonGet('activeUsers',[]);
+    users.splice(index,1);
+    jsonSet('activeUsers',users);
+    renderLoggedUsers();
+}
+
+// ---------- Messages ----------
+const messagesContainer=document.getElementById('messagesContainer');
+
+function renderMessages(){
+    const inbox = jsonGet('inbox',[]);
+    messagesContainer.innerHTML='';
+    if(inbox.length===0){ messagesContainer.innerHTML='<p>No messages.</p>'; return; }
+
+    inbox.forEach((m,idx)=>{
+        const card = document.createElement('div'); card.className='admin-card';
+        const statusClass = m.replyText || m.adminVoice ? 'replied' : 'pending';
+        const statusLabel = m.replyText || m.adminVoice ? 'Replied' : 'Pending';
+
+        const userVoiceHtml = m.userVoice ? `<div><strong>User Voice:</strong><br><audio class="small-audio" controls src="${m.userVoice}"></audio></div>`:'';
+        const adminVoiceHtml = m.adminVoice ? `<div><strong>Admin Voice:</strong><br><audio class="small-audio" controls src="${m.adminVoice}"></audio></div>`:'';
+
+        card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                <div>
+                    <h3 style="margin:0">${m.userName} <span style="color:#666">(${m.userEmail})</span></h3>
+                    <div class="meta">Templates: ${m.templates.join(' | ')} • ${new Date(m.sentAt).toLocaleString()}</div>
+                </div>
+                <div>
+                    <span class="status-pill ${statusClass}">${statusLabel}</span>
+                    <button class="btn delete" onclick="deleteMessage(${idx})">Delete message</button>
+                </div>
+            </div>
+            <div class="message-body"><strong>User message:</strong><br>${m.message||'<em>(no text)</em>'}</div>
+            ${userVoiceHtml}
+            ${adminVoiceHtml}
+            <div class="reply-area">
+                <textarea id="replyText-${idx}" class="reply-text" placeholder="Write reply...">${m.replyText||''}</textarea>
+                <div class="voice-controls">
+                    <button id="record-${idx}" class="btn">🎤 Record reply</button>
+                    <button id="stop-${idx}" class="btn" disabled>⏹ Stop</button>
+                </div>
+                <button class="btn" onclick="sendReply(${idx})" style="margin-top:8px;">Send Reply</button>
+            </div>
+        `;
+        messagesContainer.appendChild(card);
+        setupAdminRecorder(idx);
+    });
+}
+
+// ---------- Admin Voice ----------
+let recorders={};
+function setupAdminRecorder(index){
+    const recBtn=document.getElementById(`record-${index}`);
+    const stopBtn=document.getElementById(`stop-${index}`);
+    if(!recBtn || !stopBtn) return;
+    let recorder=null, chunks=[];
+    recBtn.onclick = async ()=>{
+        const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+        recorder = new MediaRecorder(stream);
+        chunks=[];
+        recorder.ondataavailable = e=>chunks.push(e.data);
+        recorder.onstop = ()=>{
+            const blob = new Blob(chunks,{type:'audio/webm'});
+            const reader = new FileReader();
+            reader.onloadend = ()=> {
+                const inbox = jsonGet('inbox',[]);
+                inbox[index].adminVoice = reader.result;
+                inbox[index].replyRead=false;
+                jsonSet('inbox',inbox);
+                renderMessages(); renderLoggedUsers();
+            };
+            reader.readAsDataURL(blob);
+        };
+        recorder.start();
+        recBtn.disabled=true; stopBtn.disabled=false;
+        recorders[index]=recorder;
+    };
+    stopBtn.onclick = ()=>{
+        if(recorders[index]) recorders[index].stop();
+        recBtn.disabled=false; stopBtn.disabled=true;
+    };
+}
+
+// ---------- Send Reply ----------
+window.sendReply = function(index){
+    const inbox=jsonGet('inbox',[]);
+    const msg=inbox[index];
+    const text=document.getElementById(`replyText-${index}`).value.trim();
+    if(!text && !msg.adminVoice){ alert('Add text or record voice'); return; }
+    inbox[index].replyText=text||null;
+    inbox[index].repliedAt=new Date().toISOString();
+    inbox[index].replyRead=false;
+    jsonSet('inbox',inbox);
+    alert('Reply sent to user inbox');
+    renderMessages(); renderLoggedUsers();
+}
+
+// ---------- Delete Message ----------
+window.deleteMessage=function(idx){
+    if(!confirm('Delete this message?')) return;
+    const inbox=jsonGet('inbox',[]);
+    inbox.splice(idx,1);
+    jsonSet('inbox',inbox);
+    renderMessages(); renderLoggedUsers();
+}
+
+// ---------- Clear All ----------
+document.getElementById('clearAllBtn').addEventListener('click', ()=>{
+    if(!confirm('Clear all messages?')) return;
+    jsonSet('inbox',[]);
+    renderMessages(); renderLoggedUsers();
+});
+
+// ---------- Refresh ----------
+document.getElementById('refreshBtn').addEventListener('click', ()=>{
+    renderMessages(); renderLoggedUsers();
+});
+
+// ---------- Initial Render ----------
+renderLoggedUsers();
+renderMessages();
 </script>
 </body>
 </html>
